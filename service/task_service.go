@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gitlab.com/nina8884807/task-manager/entity"
+	"time"
 )
 
 type TaskService struct {
@@ -26,6 +27,7 @@ func (s *TaskService) AddTask(task entity.Task) error {
 	}
 
 	task.Status = entity.StatusNotDone
+	task.CreatedAt = time.Now()
 
 	err := s.repo.SaveTask(task)
 	if err != nil {

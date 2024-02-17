@@ -15,9 +15,9 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 	}
 }
 func (r *TaskRepository) SaveTask(task entity.Task) error {
-	query := "INSERT INTO tasks (name, status) VALUES ($1, $2) "
+	query := "INSERT INTO tasks (name, status, created_at) VALUES ($1, $2, $3) "
 
-	_, err := r.db.Exec(query, task.Name, task.Status)
+	_, err := r.db.Exec(query, task.Name, task.Status, task.CreatedAt)
 	if err != nil {
 		return err
 	}
