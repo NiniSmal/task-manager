@@ -38,11 +38,14 @@ func (s *TaskService) AddTask(task entity.Task) error {
 	return nil
 }
 
-func (s *TaskService) GetTaskByID(id int64) error {
+func (s *TaskService) GetTask(id int64) (entity.Task, error) {
 
-	_, err := s.repo.GetTaskByID(id)
+	task, err := s.repo.GetTaskByID(id)
 	if err != nil {
-		return fmt.Errorf("get task: %w", err)
+		fmt.Errorf("get task: %w", err)
+
+		return entity.Task{}, err
 	}
-	return nil
+
+	return task, nil
 }
