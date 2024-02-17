@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
 
@@ -24,9 +25,11 @@ func (s *TaskService) AddTask(task entity.Task) error {
 		return errors.New("name is empty")
 	}
 
+	task.Status = "not done"
+
 	err := s.repo.SaveTask(task)
 	if err != nil {
-		return err
+		return fmt.Errorf("save task: %w", err)
 	}
 
 	return nil

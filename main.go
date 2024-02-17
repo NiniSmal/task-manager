@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	//docker run -d -p 8014:5432 -e POSTGRES_PASSWORD=dev -e POSTGRES_DATABASE=postgres postgres
 
 	db, err := sql.Open("postgres", "postgres://postgres:dev@localhost:8014/postgres?sslmode=disable")
 	if err != nil {

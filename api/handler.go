@@ -22,10 +22,11 @@ type TaskService interface {
 
 func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	var task entity.Task
-	//TODO decode Body
+
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	err = h.service.AddTask(task)
