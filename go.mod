@@ -1,0 +1,5 @@
+module gitlab.com/nina8884807/task-manager
+
+go 1.21.1
+
+require github.com/lib/pq v1.10.9 // indirect
