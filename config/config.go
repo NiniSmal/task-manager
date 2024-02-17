@@ -6,7 +6,7 @@ import (
 
 type Config struct {
 	Port     string `env:"PORT"`
-	DataBase string `env:"DATA"`
+	Postgres string `env:"Postgres"`
 }
 
 func GetConfig() (*Config, error) {
