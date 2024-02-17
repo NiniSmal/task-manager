@@ -25,7 +25,7 @@ func (s *TaskService) AddTask(task entity.Task) error {
 		return errors.New("name is empty")
 	}
 
-	task.Status = "not done"
+	task.Status = entity.StatusNotDone
 
 	err := s.repo.SaveTask(task)
 	if err != nil {
