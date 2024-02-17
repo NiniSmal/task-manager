@@ -1,0 +1,6 @@
+CREATE TABLE tasks(
+                      id BIGSERIAL PRIMARY KEY ,
+                      name TEXT NOT NULL,
+                      status TEXT NOT NULL,
+                      created_at timestamptz
+);
