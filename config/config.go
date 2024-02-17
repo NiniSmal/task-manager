@@ -2,21 +2,18 @@ package config
 
 import (
 	"github.com/ilyakaznacheev/cleanenv"
-	"log"
 )
 
 type Config struct {
-	Port string `json:"PORT"`
-	Data string `json:"DATA"`
+	Port     string `env:"PORT"`
+	DataBase string `env:"DATA"`
 }
 
-var config Config
-
-func GetConfig() *Config {
-	config = Config{}
+func GetConfig() (*Config, error) {
+	config := Config{}
 	err := cleanenv.ReadConfig(".env", &config)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return &config
+	return &config, nil
 }
