@@ -12,9 +12,12 @@ import (
 )
 
 func main() {
-	ctg := config.GetConfig()
+	ctg, err := config.GetConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	db, err := sql.Open("postgres", ctg.Data)
+	db, err := sql.Open("postgres", ctg.Postgres)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,7 +31,10 @@ func main() {
 	s := service.NewTaskService(r)
 	h := api.NewHandler(s)
 	router := http.NewServeMux()
+
 	router.HandleFunc("/createTask", h.CreateTask)
+	router.HandleFunc("/getTaskByID", h.GetTaskByID)
+
 	err = http.ListenAndServe(ctg.Port, router)
 	if err != nil {
 		log.Fatal(err)

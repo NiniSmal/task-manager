@@ -19,7 +19,7 @@ func NewHandler(s TaskService) *Handler {
 
 type TaskService interface {
 	AddTask(task entity.Task) error
-	GetTaskByID(id int64) (entity.Task, error)
+	GetTask(id int64) (entity.Task, error)
 }
 
 func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +47,13 @@ func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.service.GetTaskByID(int64(id))
+	task, err := h.service.GetTask(int64(id))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

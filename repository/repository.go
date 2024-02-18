@@ -26,12 +26,14 @@ func (r *TaskRepository) SaveTask(task entity.Task) error {
 }
 
 func (r *TaskRepository) GetTaskByID(id int64) (entity.Task, error) {
-	query := "SELECT name, status, created_at FROM tasks WHERE id=$1"
+	query := "SELECT id, name, status, created_at FROM tasks WHERE id=$1"
 
 	var task entity.Task
-	err := r.db.QueryRow(query, id).Scan(&task.Name, &task.Status, &task.CreatedAt)
+
+	err := r.db.QueryRow(query, id).Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt)
 	if err != nil {
 		return entity.Task{}, err
 	}
+
 	return task, nil
 }
