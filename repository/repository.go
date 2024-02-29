@@ -37,3 +37,26 @@ func (r *TaskRepository) GetTaskByID(id int64) (entity.Task, error) {
 
 	return task, nil
 }
+
+func (r *TaskRepository) GetAllTasks() ([]entity.Task, error) {
+	query := "Select id, name, status, created_at FROM tasks"
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var tasks []entity.Task
+
+	for rows.Next() {
+		var task entity.Task
+		err = rows.Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
+}

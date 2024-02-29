@@ -20,6 +20,7 @@ func NewHandler(s TaskService) *Handler {
 type TaskService interface {
 	AddTask(task entity.Task) error
 	GetTask(id int64) (entity.Task, error)
+	GetAllTasks() ([]entity.Task, error)
 }
 
 func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +54,23 @@ func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	err = json.NewEncoder(w).Encode(task)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+func (h *Handler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
+	tasks, err := h.service.GetAllTasks()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(tasks)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
