@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"gitlab.com/nina8884807/task-manager/entity"
@@ -18,12 +19,12 @@ func NewTaskService(r Repository) *TaskService {
 }
 
 type Repository interface {
-	SaveTask(task entity.Task) error
-	GetTaskByID(id int64) (entity.Task, error)
-	GetAllTasks() ([]entity.Task, error)
+	SaveTask(ctx context.Context, task entity.Task) error
+	GetTaskByID(ctx context.Context, id int64) (entity.Task, error)
+	GetAllTasks(ctx context.Context) ([]entity.Task, error)
 }
 
-func (s *TaskService) AddTask(task entity.Task) error {
+func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 	if task.Name == "" {
 		return errors.New("name is empty")
 	}
@@ -31,15 +32,15 @@ func (s *TaskService) AddTask(task entity.Task) error {
 	task.Status = entity.StatusNotDone
 	task.CreatedAt = time.Now()
 
-	err := s.repo.SaveTask(task)
+	err := s.repo.SaveTask(ctx, task)
 	if err != nil {
 		return fmt.Errorf("save task: %w", err)
 	}
 	return nil
 }
 
-func (s *TaskService) GetTask(id int64) (entity.Task, error) {
-	task, err := s.repo.GetTaskByID(id)
+func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error) {
+	task, err := s.repo.GetTaskByID(ctx, id)
 	if err != nil {
 		return entity.Task{}, fmt.Errorf("get task: %w", err)
 	}
@@ -47,8 +48,8 @@ func (s *TaskService) GetTask(id int64) (entity.Task, error) {
 	return task, nil
 }
 
-func (s *TaskService) GetAllTasks() ([]entity.Task, error) {
-	tasks, err := s.repo.GetAllTasks()
+func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
+	tasks, err := s.repo.GetAllTasks(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get all tasks: %w", err)
 	}
