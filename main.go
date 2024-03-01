@@ -2,9 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"gitlab.com/nina8884807/task-manager/api"
 	"gitlab.com/nina8884807/task-manager/config"
+	"gitlab.com/nina8884807/task-manager/middleware"
 	"gitlab.com/nina8884807/task-manager/repository"
 	"gitlab.com/nina8884807/task-manager/service"
 	"log"
@@ -30,7 +32,9 @@ func main() {
 	r := repository.NewTaskRepository(db)
 	s := service.NewTaskService(r)
 	h := api.NewHandler(s)
-	router := http.NewServeMux()
+	router := chi.NewRouter()
+
+	router.Use(middleware.Logging, middleware.ResponseHeader)
 
 	router.HandleFunc("/createTask", h.CreateTask)
 	router.HandleFunc("/getTaskByID", h.GetTaskByID)
