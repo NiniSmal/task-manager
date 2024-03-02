@@ -64,3 +64,13 @@ func (r *TaskRepository) GetAllTasks(ctx context.Context) ([]entity.Task, error)
 
 	return tasks, nil
 }
+
+func (r *TaskRepository) UpdateTaskById(ctx context.Context, task entity.Task) error {
+	query := "UPDATE tasks SET name = $1, status =$2 WHERE id =$3"
+
+	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
