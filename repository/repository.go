@@ -18,7 +18,9 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 }
 func (r *TaskRepository) SaveTask(ctx context.Context, task entity.Task) error {
 	query := "INSERT INTO tasks (name, status, created_at) VALUES ($1, $2, $3) "
-	time.Sleep(5 * time.Second)
+
+	time.Sleep(3 * time.Second)
+
 	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.CreatedAt)
 	if err != nil {
 		return err
@@ -63,4 +65,14 @@ func (r *TaskRepository) GetAllTasks(ctx context.Context) ([]entity.Task, error)
 	}
 
 	return tasks, nil
+}
+
+func (r *TaskRepository) UpdateTask(ctx context.Context, task entity.Task) error {
+	query := "UPDATE tasks SET name = $1, status = $2 WHERE id = $3"
+
+	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

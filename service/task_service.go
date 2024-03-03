@@ -22,6 +22,7 @@ type Repository interface {
 	SaveTask(ctx context.Context, task entity.Task) error
 	GetTaskByID(ctx context.Context, id int64) (entity.Task, error)
 	GetAllTasks(ctx context.Context) ([]entity.Task, error)
+	UpdateTask(ctx context.Context, task entity.Task) error
 }
 
 func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
@@ -54,4 +55,16 @@ func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 		return nil, fmt.Errorf("get all tasks: %w", err)
 	}
 	return tasks, nil
+}
+
+func (s *TaskService) UpdateTask(ctx context.Context, task entity.Task) error {
+	if task.Status != entity.StatusDone || task.Status != entity.StatusNotDone {
+		return errors.New("status  is not correct")
+	}
+
+	err := s.repo.UpdateTask(ctx, task)
+	if err != nil {
+		return fmt.Errorf("update task:%w", err)
+	}
+	return nil
 }
