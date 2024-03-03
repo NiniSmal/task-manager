@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"gitlab.com/nina8884807/task-manager/entity"
-	"time"
 )
 
 type TaskRepository struct {
@@ -18,8 +17,6 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 }
 func (r *TaskRepository) SaveTask(ctx context.Context, task entity.Task) error {
 	query := "INSERT INTO tasks (name, status, created_at) VALUES ($1, $2, $3) "
-
-	time.Sleep(3 * time.Second)
 
 	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.CreatedAt)
 	if err != nil {
