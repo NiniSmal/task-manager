@@ -58,13 +58,17 @@ func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 }
 
 func (s *TaskService) UpdateTask(ctx context.Context, task entity.Task) error {
-	if task.Status != entity.StatusDone || task.Status != entity.StatusNotDone {
+	if task.Status != entity.StatusDone && task.Status != entity.StatusNotDone {
 		return errors.New("status  is not correct")
 	}
-
-	err := s.repo.UpdateTask(ctx, task)
+	_, err := s.repo.GetTaskByID(ctx, task.ID)
 	if err != nil {
-		return fmt.Errorf("update task:%w", err)
+		return fmt.Errorf("get task by id: %w", err)
+	}
+
+	err = s.repo.UpdateTask(ctx, task)
+	if err != nil {
+		return fmt.Errorf("update task: %w", err)
 	}
 	return nil
 }
