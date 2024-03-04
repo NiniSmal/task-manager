@@ -53,7 +53,9 @@ func main() {
 	router.HandleFunc("/getTaskByID", ht.GetTaskByID)
 	router.HandleFunc("/getAllTasks", ht.GetAllTasks)
 	router.HandleFunc("/updateTask", ht.UpdateTask)
+
 	router.HandleFunc("/createUser", hu.CreateUser)
+	router.HandleFunc("/login", hu.Login)
 
 	err = http.ListenAndServe(ctg.Port, router)
 	if err != nil {
