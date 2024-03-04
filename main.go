@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
+	"github.com/pressly/goose/v3"
 	"gitlab.com/nina8884807/task-manager/api"
 	"gitlab.com/nina8884807/task-manager/config"
 	"gitlab.com/nina8884807/task-manager/middleware"
@@ -28,6 +29,14 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println("db - OK")
+
+	//make migrations
+
+	log.Printf("Start migrating database \n")
+	err = goose.Up(db, "migrations")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	r := repository.NewTaskRepository(db)
 	s := service.NewTaskService(r)
