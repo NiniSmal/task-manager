@@ -38,17 +38,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := repository.NewTaskRepository(db)
-	s := service.NewTaskService(r)
-	h := api.NewHandler(s)
+	rt := repository.NewTaskRepository(db)
+	st := service.NewTaskService(rt)
+	ht := api.NewTaskHandler(st)
+	ut := repository.NewUserRepository(db)
+	su := service.NewUserService(ut)
+	hu := api.NewUserHandler(su)
+
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logging, middleware.ResponseHeader)
 
-	router.HandleFunc("/createTask", h.CreateTask)
-	router.HandleFunc("/getTaskByID", h.GetTaskByID)
-	router.HandleFunc("/getAllTasks", h.GetAllTasks)
-	router.HandleFunc("/updateTask", h.UpdateTask)
+	router.HandleFunc("/createTask", ht.CreateTask)
+	router.HandleFunc("/getTaskByID", ht.GetTaskByID)
+	router.HandleFunc("/getAllTasks", ht.GetAllTasks)
+	router.HandleFunc("/updateTask", ht.UpdateTask)
+	router.HandleFunc("/createUser", hu.CreateUser)
 
 	err = http.ListenAndServe(ctg.Port, router)
 	if err != nil {
