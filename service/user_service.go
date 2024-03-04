@@ -21,12 +21,12 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user entity.User) error
 }
 
-func (u *UserService) AddUser(ctx context.Context, user entity.User) error {
+func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 	user.CreatedAt = time.Now()
 
 	err := u.repo.CreateUser(ctx, user)
 	if err != nil {
-		return fmt.Errorf("add user %w", err)
+		return fmt.Errorf("create user %w", err)
 	}
 	return nil
 }

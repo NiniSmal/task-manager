@@ -4,7 +4,7 @@ CREATE TABLE tasks
     id         BIGSERIAL PRIMARY KEY,
     name       TEXT        NOT NULL,
     status     TEXT        NOT NULL,
-    created_at timestamptz NOT NULL DEFAULT now()
+    created_at timestamptz NOT NULL
 );
 
 -- +goose Down

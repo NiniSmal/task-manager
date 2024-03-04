@@ -18,7 +18,7 @@ func NewUserHandler(u UserService) *UserHandler {
 }
 
 type UserService interface {
-	AddUser(ctx context.Context, user entity.User) error
+	CreateUser(ctx context.Context, user entity.User) error
 }
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +30,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = u.service.AddUser(r.Context(), user)
+	err = u.service.CreateUser(r.Context(), user)
 	if err != nil {
 		HandlerError(w, err)
 		return
