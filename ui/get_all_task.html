@@ -8,15 +8,14 @@
     <title>Task manager</title>
 </head>
 <body>
+
 <div id="result"></div>
 <ul id="tasks"></ul>
+<form action="/getAllTasks">
 
-<form action="/createTask">
-
-    <input type="text" name="name" id="nameTask" placeholder="Название задачи">
-    <button type="button" id="buttonCreate">Создать</button>
+    <button type="button" id="buttonGetAll">Все задачи</button>
 </form>
 
-<script src="index.js"></script>
+<script src="get_all_tasks.js"></script>
 </body>
 </html>

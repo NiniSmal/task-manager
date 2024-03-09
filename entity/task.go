@@ -12,4 +12,5 @@ type Task struct {
 	Name      string    `json:"name"`
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
+	UserID    int64     `json:"user_id"`
 }

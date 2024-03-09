@@ -40,6 +40,7 @@ func (h *TaskHandler) HandlerAnswerEncode(w http.ResponseWriter, body any) error
 }
 
 func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
+
 	var task entity.Task
 
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -48,7 +49,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.AddTask(r.Context(), task)
+	err = h.service.AddTask(r.Context(), task) //передаем контекст, полученный из запроса.
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -79,7 +80,8 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.service.GetAllTasks(r.Context())
+
+	tasks, err := h.service.GetAllTasks(r.Context()) //передаем контекст, полученный из запроса
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -104,6 +106,7 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		HandlerError(w, err)
 		return
 	}
+
 	err = h.service.UpdateTask(ctx, task)
 	if err != nil {
 		HandlerError(w, err)

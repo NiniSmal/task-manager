@@ -7,7 +7,6 @@ import (
 	"github.com/pressly/goose/v3"
 	"gitlab.com/nina8884807/task-manager/api"
 	"gitlab.com/nina8884807/task-manager/config"
-	"gitlab.com/nina8884807/task-manager/middleware"
 	"gitlab.com/nina8884807/task-manager/repository"
 	"gitlab.com/nina8884807/task-manager/service"
 	"log"
@@ -19,7 +18,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	//подключение к бд
 	db, err := sql.Open("postgres", ctg.Postgres)
 	if err != nil {
 		log.Fatal(err)
@@ -33,6 +32,7 @@ func main() {
 	//make migrations
 
 	log.Printf("Start migrating database \n")
+	//применяем все возможные миграции
 	err = goose.Up(db, "migrations")
 	if err != nil {
 		log.Fatal(err)
@@ -44,14 +44,19 @@ func main() {
 	ut := repository.NewUserRepository(db)
 	su := service.NewUserService(ut)
 	hu := api.NewUserHandler(su)
-
+	//midll такой же обработчик, поэтому так же принимает репозиторий
+	mw := api.NewMiddleware(rt)
 	router := chi.NewRouter()
 
-	router.Use(middleware.Logging, middleware.ResponseHeader)
+	router.Use(api.Logging, api.ResponseHeader)
+	//для части обработчиков создаем группу с доп. middleware для авторизации, тк она нужна не для всех обработчиков
+	router.Group(func(r chi.Router) {
+		r.Use(mw.AuthHandler)
+		r.HandleFunc("/createTask", ht.CreateTask)
+		r.HandleFunc("/getTaskByID", ht.GetTaskByID)
+		r.HandleFunc("/getAllTasks", ht.GetAllTasks)
+	})
 
-	router.HandleFunc("/createTask", ht.CreateTask)
-	router.HandleFunc("/getTaskByID", ht.GetTaskByID)
-	router.HandleFunc("/getAllTasks", ht.GetAllTasks)
 	router.HandleFunc("/updateTask", ht.UpdateTask)
 
 	router.HandleFunc("/createUser", hu.CreateUser)
