@@ -54,11 +54,18 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookie := http.Cookie{
-		Name:    "session_id",
-		Value:   sessionID.String(),
-		Path:    "/",
-		Expires: time.Now().Add(time.Hour),
-		MaxAge:  3600,
+		Name:       "session_id",
+		Value:      sessionID.String(),
+		Path:       "/",
+		Domain:     "localhost",
+		Expires:    time.Now().Add(time.Hour),
+		RawExpires: "",
+		MaxAge:     3600,
+		Secure:     false,
+		HttpOnly:   false,
+		SameSite:   http.SameSiteNoneMode,
+		Raw:        "",
+		Unparsed:   nil,
 	}
 	http.SetCookie(w, &cookie)
 }

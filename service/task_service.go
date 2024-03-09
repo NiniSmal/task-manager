@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"time"
 )
@@ -21,8 +22,9 @@ func NewTaskService(r Repository) *TaskService {
 type Repository interface {
 	SaveTask(ctx context.Context, task entity.Task) error
 	GetTaskByID(ctx context.Context, id int64) (entity.Task, error)
-	GetAllTasks(ctx context.Context) ([]entity.Task, error)
+	GetAllTasks(ctx context.Context, userID int64) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, task entity.Task) error
+	GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (int64, error)
 }
 
 func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
@@ -32,6 +34,10 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 
 	task.Status = entity.StatusNotDone
 	task.CreatedAt = time.Now()
+
+	userID := ctx.Value("user_id").(int64)
+
+	task.UserID = userID
 
 	err := s.repo.SaveTask(ctx, task)
 	if err != nil {
@@ -50,7 +56,9 @@ func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error
 }
 
 func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
-	tasks, err := s.repo.GetAllTasks(ctx)
+	userID := ctx.Value("user_id").(int64)
+
+	tasks, err := s.repo.GetAllTasks(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get all tasks: %w", err)
 	}
@@ -61,6 +69,7 @@ func (s *TaskService) UpdateTask(ctx context.Context, task entity.Task) error {
 	if task.Status != entity.StatusDone && task.Status != entity.StatusNotDone {
 		return errors.New("status  is not correct")
 	}
+
 	_, err := s.repo.GetTaskByID(ctx, task.ID)
 	if err != nil {
 		return fmt.Errorf("get task by id: %w", err)

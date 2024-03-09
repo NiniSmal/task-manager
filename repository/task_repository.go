@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
 
@@ -16,9 +17,9 @@ func NewTaskRepository(db *sql.DB) *TaskRepository {
 	}
 }
 func (r *TaskRepository) SaveTask(ctx context.Context, task entity.Task) error {
-	query := "INSERT INTO tasks (name, status, created_at) VALUES ($1, $2, $3) "
+	query := "INSERT INTO tasks (name, status, created_at, user_id) VALUES ($1, $2, $3, $4) "
 
-	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.CreatedAt)
+	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.CreatedAt, task.UserID)
 	if err != nil {
 		return err
 	}
@@ -39,10 +40,10 @@ func (r *TaskRepository) GetTaskByID(ctx context.Context, id int64) (entity.Task
 	return task, nil
 }
 
-func (r *TaskRepository) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
-	query := "SELECT id, name, status, created_at FROM tasks"
+func (r *TaskRepository) GetAllTasks(ctx context.Context, userID int64) ([]entity.Task, error) {
+	query := "SELECT id, name, status, created_at, user_id FROM tasks WHERE user_id = $1"
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,7 @@ func (r *TaskRepository) GetAllTasks(ctx context.Context) ([]entity.Task, error)
 
 	for rows.Next() {
 		var task entity.Task
-		err = rows.Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt)
+		err = rows.Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt, &task.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -72,4 +73,16 @@ func (r *TaskRepository) UpdateTask(ctx context.Context, task entity.Task) error
 		return err
 	}
 	return nil
+}
+
+func (r *TaskRepository) GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (int64, error) {
+	query := "SELECT user_id FROM sessions WHERE id = $1"
+
+	var userID int64
+
+	err := r.db.QueryRowContext(ctx, query, sessionID).Scan(&userID)
+	if err != nil {
+		return 0, err
+	}
+	return userID, nil
 }
