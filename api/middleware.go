@@ -49,15 +49,14 @@ func (m *Middleware) AuthHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		userID, role, err := m.repo.GetUserIDBySessionID(ctx, sessionID) //в таблице связи  возвращаем нужный userID
+		user, err := m.repo.GetUserIDBySessionID(ctx, sessionID) //в таблице связи  возвращаем нужный userID
 		if err != nil {
 			HandlerError(w, err)
 			return
 		}
 
-		ctx = context.WithValue(ctx, "user_id", userID) //вносим в context
-		ctx = context.WithValue(ctx, "role", role)
-		r = r.WithContext(ctx) //перезаписываем запрос с новым контестом, в который сохранили userID
+		ctx = context.WithValue(ctx, "user", user) //вносим в context
+		r = r.WithContext(ctx)                     //перезаписываем запрос с новым контестом, в который сохранили userID
 		next.ServeHTTP(w, r)
 	})
 }

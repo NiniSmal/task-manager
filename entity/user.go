@@ -2,9 +2,11 @@ package entity
 
 import "time"
 
+type Role string
+
 const (
-	RoleUser  = "user"
-	RoleAdmin = "admin"
+	RoleUser  Role = "user"
+	RoleAdmin Role = "admin"
 )
 
 type User struct {
@@ -12,5 +14,5 @@ type User struct {
 	Login     string    `json:"login"`
 	Password  string    `json:"password"`
 	CreatedAt time.Time `json:"created_at"`
-	Role      string    `json:"role"`
+	Role      Role      `json:"role"`
 }
