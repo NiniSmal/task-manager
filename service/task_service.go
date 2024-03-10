@@ -36,9 +36,9 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 	task.Status = entity.StatusNotDone
 	task.CreatedAt = time.Now()
 
-	userID := ctx.Value("user_id").(int64)
+	user := ctx.Value("user").(entity.User)
 
-	task.UserID = userID
+	task.UserID = user.ID
 
 	err := s.repo.SaveTask(ctx, task)
 	if err != nil {
@@ -48,17 +48,16 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 }
 
 func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error) {
-	userID := ctx.Value("user_id").(int64)
-	role := ctx.Value("role")
+	user := ctx.Value("user").(entity.User)
 
 	task, err := s.repo.GetTaskByID(ctx, id)
 	if err != nil {
 		return entity.Task{}, fmt.Errorf("get task by %f: %w", id, err)
 	}
-	if role == entity.RoleAdmin {
+	if user.Role == entity.RoleAdmin {
 		return task, nil
 	}
-	if task.UserID == userID {
+	if task.UserID == user.ID {
 		return task, nil
 	} else {
 		return entity.Task{}, fmt.Errorf("get task by %f: %w", id, err)
@@ -66,17 +65,16 @@ func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error
 }
 
 func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
-	userID := ctx.Value("user_id").(int64)
-	role := ctx.Value("role")
+	user := ctx.Value("user").(entity.User)
 
-	if role == entity.RoleAdmin {
+	if user.Role == entity.RoleAdmin {
 		tasks, err := s.repo.GetTasks(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("get all tasks: %w", err)
 		}
 		return tasks, nil
 	}
-	tasks, err := s.repo.GetUserTasks(ctx, userID)
+	tasks, err := s.repo.GetUserTasks(ctx, user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("get all tasks: %w", err)
 	}
@@ -85,6 +83,8 @@ func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 }
 
 func (s *TaskService) UpdateTask(ctx context.Context, task entity.Task) error {
+	user := ctx.Value("user").(entity.User)
+
 	if task.Status != entity.StatusDone && task.Status != entity.StatusNotDone {
 		return errors.New("status  is not correct")
 	}
@@ -94,9 +94,17 @@ func (s *TaskService) UpdateTask(ctx context.Context, task entity.Task) error {
 		return fmt.Errorf("get task by id: %w", err)
 	}
 
-	err = s.repo.UpdateTask(ctx, task)
-	if err != nil {
-		return fmt.Errorf("update task: %w", err)
+	if user.Role == entity.RoleAdmin {
+		err = s.repo.UpdateTask(ctx, task)
+		if err != nil {
+			return fmt.Errorf("update task: %w", err)
+		}
+	}
+	if user.ID == task.UserID {
+		err = s.repo.UpdateTask(ctx, task)
+		if err != nil {
+			return fmt.Errorf("update task: %w", err)
+		}
 	}
 	return nil
 }

@@ -55,9 +55,8 @@ func main() {
 		r.HandleFunc("/createTask", ht.CreateTask)
 		r.HandleFunc("/getTaskByID", ht.GetTaskByID)
 		r.HandleFunc("/getAllTasks", ht.GetAllTasks)
+		r.HandleFunc("/updateTask", ht.UpdateTask)
 	})
-
-	router.HandleFunc("/updateTask", ht.UpdateTask)
 
 	router.HandleFunc("/createUser", hu.CreateUser)
 	router.HandleFunc("/login", hu.Login)
