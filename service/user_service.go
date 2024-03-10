@@ -20,13 +20,13 @@ func NewUserService(r UserRepository) *UserService {
 
 type UserRepository interface {
 	CreateUser(ctx context.Context, user entity.User) error
-	GetUserIDByLoginAndPassword(ctx context.Context, user entity.User) (int64, error)
-	SaveSession(ctx context.Context, sessionID uuid.UUID, userID int64) error
+	GetUserIDByLoginAndPassword(ctx context.Context, user entity.User) (int64, string, error)
+	SaveSession(ctx context.Context, sessionID uuid.UUID, userID int64, role string) error
 }
 
 func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 	user.CreatedAt = time.Now()
-
+	user.Role = entity.RoleUser
 	err := u.repo.CreateUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("create user %w", err)
@@ -35,14 +35,14 @@ func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 }
 
 func (u *UserService) Login(ctx context.Context, user entity.User) (uuid.UUID, error) {
-	userID, err := u.repo.GetUserIDByLoginAndPassword(ctx, user)
+	userID, role, err := u.repo.GetUserIDByLoginAndPassword(ctx, user)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("login: %w", err)
 	}
 
 	sessionID := uuid.New()
 
-	err = u.repo.SaveSession(ctx, sessionID, userID)
+	err = u.repo.SaveSession(ctx, sessionID, userID, role)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("save session: %w", err)
 	}

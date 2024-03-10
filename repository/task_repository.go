@@ -64,6 +64,30 @@ func (r *TaskRepository) GetAllTasks(ctx context.Context, userID int64) ([]entit
 
 	return tasks, nil
 }
+func (r *TaskRepository) GetAllTasksAdmin(ctx context.Context) ([]entity.Task, error) {
+	query := "SELECT id, name, status, created_at FROM tasks"
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var tasks []entity.Task
+
+	for rows.Next() {
+		var task entity.Task
+		err = rows.Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
 
 func (r *TaskRepository) UpdateTask(ctx context.Context, task entity.Task) error {
 	query := "UPDATE tasks SET name = $1, status = $2 WHERE id = $3"
@@ -75,14 +99,15 @@ func (r *TaskRepository) UpdateTask(ctx context.Context, task entity.Task) error
 	return nil
 }
 
-func (r *TaskRepository) GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (int64, error) {
-	query := "SELECT user_id FROM sessions WHERE id = $1"
+func (r *TaskRepository) GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (int64, string, error) {
+	query := "SELECT user_id, role FROM sessions WHERE id = $1"
 
 	var userID int64
+	var role string
 
-	err := r.db.QueryRowContext(ctx, query, sessionID).Scan(&userID)
+	err := r.db.QueryRowContext(ctx, query, sessionID).Scan(&userID, &role)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
-	return userID, nil
+	return userID, role, nil
 }

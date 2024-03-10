@@ -21,7 +21,7 @@ func NewTaskHandler(s TaskService) *TaskHandler {
 
 type TaskService interface {
 	AddTask(ctx context.Context, task entity.Task) error
-	GetTask(ctx context.Context, id int64) (entity.Task, error)
+	GetTask(ctx context.Context, id int64, role string) (entity.Task, error)
 	GetAllTasks(ctx context.Context) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, task entity.Task) error
 }
@@ -65,7 +65,9 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.service.GetTask(r.Context(), int64(id))
+	role := r.URL.Query().Get("role")
+
+	task, err := h.service.GetTask(r.Context(), int64(id), role)
 	if err != nil {
 		HandlerError(w, err)
 		return

@@ -23,8 +23,9 @@ type Repository interface {
 	SaveTask(ctx context.Context, task entity.Task) error
 	GetTaskByID(ctx context.Context, id int64) (entity.Task, error)
 	GetAllTasks(ctx context.Context, userID int64) ([]entity.Task, error)
+	GetAllTasksAdmin(ctx context.Context) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, task entity.Task) error
-	GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (int64, error)
+	GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (int64, string, error)
 }
 
 func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
@@ -46,7 +47,8 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 	return nil
 }
 
-func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error) {
+func (s *TaskService) GetTask(ctx context.Context, id int64, role string) (entity.Task, error) {
+
 	task, err := s.repo.GetTaskByID(ctx, id)
 	if err != nil {
 		return entity.Task{}, fmt.Errorf("get task: %w", err)
@@ -57,12 +59,22 @@ func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error
 
 func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 	userID := ctx.Value("user_id").(int64)
+	role := ctx.Value("role")
 
-	tasks, err := s.repo.GetAllTasks(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("get all tasks: %w", err)
+	if role == entity.RoleUser {
+		tasks, err := s.repo.GetAllTasks(ctx, userID)
+		if err != nil {
+			return nil, fmt.Errorf("get all tasks: %w", err)
+		}
+		return tasks, nil
+	} else if role == entity.RoleAdmin {
+		tasks, err := s.repo.GetAllTasksAdmin(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("get all tasks: %w", err)
+		}
+		return tasks, nil
 	}
-	return tasks, nil
+	return nil, errors.New("get all tasks")
 }
 
 func (s *TaskService) UpdateTask(ctx context.Context, task entity.Task) error {
