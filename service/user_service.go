@@ -21,11 +21,10 @@ func NewUserService(r UserRepository) *UserService {
 type UserRepository interface {
 	CreateUser(ctx context.Context, user entity.User) error
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
-	Validate(user entity.User) error
 }
 
 func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
-	err := u.repo.Validate(user)
+	err := user.Validate()
 	if err != nil {
 		return fmt.Errorf("the error is in validation ")
 	}

@@ -2,7 +2,7 @@
 CREATE TABLE users
 (
     id         BIGSERIAL PRIMARY KEY,
-    login      TEXT        NOT NULL,
+    login      TEXT        NOT NULL UNIQUE,
     password   TEXT        NOT NULL,
     created_at timestamptz NOT NULL,
     role       TEXT        NOT NULL
