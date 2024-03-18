@@ -2,6 +2,7 @@ package entity
 
 import (
 	"errors"
+	"fmt"
 	"time"
 	"unicode/utf8"
 )
@@ -29,11 +30,11 @@ func (user *User) Validate() error {
 
 	rl := utf8.RuneCountInString(user.Login)
 	if rl < minLogin || rl > maxLogin {
-		return errors.New("the login must be minimum 1 symbol and not more 15 symbols")
+		return fmt.Errorf("the login must be minimum %d symbol and not more %d symbols", minLogin, maxLogin)
 	}
 
-	if user.Password != "" {
-		return errors.New("the password must be more than 0")
+	if user.Password == "" {
+		return errors.New("the password can't be empty")
 	}
 	return nil
 }

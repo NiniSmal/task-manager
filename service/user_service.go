@@ -26,8 +26,9 @@ type UserRepository interface {
 func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 	err := user.Validate()
 	if err != nil {
-		return fmt.Errorf("the error is in validation ")
+		return fmt.Errorf("the error is in validation: %w", err)
 	}
+
 	user.CreatedAt = time.Now()
 	user.Role = entity.RoleUser
 	err = u.repo.CreateUser(ctx, user)
