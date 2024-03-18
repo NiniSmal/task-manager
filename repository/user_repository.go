@@ -37,3 +37,15 @@ func (r *UserRepository) SaveSession(ctx context.Context, sessionID uuid.UUID, u
 
 	return nil
 }
+
+func (r *UserRepository) CheckUserByLogin(ctx context.Context, login string) (entity.User, error) {
+	query := "SELECT id, login FROM users WHERE login = $1"
+
+	var user entity.User
+
+	err := r.db.QueryRowContext(ctx, query, login).Scan(&user.ID, &user.Login)
+	if err != nil {
+		return entity.User{}, nil
+	}
+	return user, nil
+}

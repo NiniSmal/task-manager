@@ -21,12 +21,22 @@ func NewUserService(r UserRepository) *UserService {
 type UserRepository interface {
 	CreateUser(ctx context.Context, user entity.User) error
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
+	CheckUserByLogin(ctx context.Context, login string) (entity.User, error)
 }
 
 func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 	err := user.Validate()
 	if err != nil {
 		return fmt.Errorf("validation: %w", err)
+	}
+
+	userDB, err := u.repo.CheckUserByLogin(ctx, user.Login)
+	if err != nil {
+		return fmt.Errorf("check user by login: %w", err)
+	}
+
+	if userDB.Login == user.Login {
+		return fmt.Errorf("this login already exists")
 	}
 
 	user.CreatedAt = time.Now()
