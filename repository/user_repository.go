@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
@@ -45,7 +46,10 @@ func (r *UserRepository) CheckUserByLogin(ctx context.Context, login string) (en
 
 	err := r.db.QueryRowContext(ctx, query, login).Scan(&user.ID, &user.Login)
 	if err != nil {
-		return entity.User{}, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.User{}, entity.ErrNotFound
+		}
+		return entity.User{}, err
 	}
 	return user, nil
 }

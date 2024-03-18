@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
@@ -30,15 +31,13 @@ func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 		return fmt.Errorf("validation: %w", err)
 	}
 
-	userDB, err := u.repo.CheckUserByLogin(ctx, user.Login)
-	if err != nil {
-		return fmt.Errorf("check user by login: %w", err)
-	}
-
-	if userDB.Login == user.Login {
+	_, err = u.repo.CheckUserByLogin(ctx, user.Login)
+	if err == nil {
 		return fmt.Errorf("this login already exists")
 	}
-
+	if !errors.Is(err, entity.ErrNotFound) {
+		return fmt.Errorf("get user by login: %w", err)
+	}
 	user.CreatedAt = time.Now()
 	user.Role = entity.RoleUser
 	err = u.repo.CreateUser(ctx, user)
