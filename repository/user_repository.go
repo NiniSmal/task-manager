@@ -37,9 +37,3 @@ func (r *UserRepository) SaveSession(ctx context.Context, sessionID uuid.UUID, u
 
 	return nil
 }
-
-//
-//func (r *UserRepository) GetUserByLogin(ctx context.Context, login string) (bool, error) {
-//	query := "SELECT id, login FROM users WHERE login = $1"
-//
-//}
