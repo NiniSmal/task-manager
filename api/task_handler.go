@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"log"
 	"net/http"
@@ -23,7 +24,7 @@ type TaskService interface {
 	AddTask(ctx context.Context, task entity.Task) error
 	GetTask(ctx context.Context, id int64) (entity.Task, error)
 	GetAllTasks(ctx context.Context) ([]entity.Task, error)
-	UpdateTask(ctx context.Context, task entity.Task) error
+	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
 }
 
 func HandlerError(w http.ResponseWriter, err error) {
@@ -57,8 +58,8 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
-	idR := r.URL.Query().Get("id")
-
+	//idR := r.URL.Query().Get("id")
+	idR := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idR)
 	if err != nil {
 		HandlerError(w, err)
@@ -99,15 +100,21 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var task entity.Task
+	idR := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idR)
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
+	var task entity.UpdateTask
 
-	err := json.NewDecoder(r.Body).Decode(&task)
+	err = json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
 		HandlerError(w, err)
 		return
 	}
 
-	err = h.service.UpdateTask(ctx, task)
+	err = h.service.UpdateTask(ctx, int64(id), task)
 	if err != nil {
 		HandlerError(w, err)
 		return

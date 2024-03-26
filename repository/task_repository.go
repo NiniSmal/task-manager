@@ -89,10 +89,10 @@ func (r *TaskRepository) GetTasks(ctx context.Context) ([]entity.Task, error) {
 	return tasks, nil
 }
 
-func (r *TaskRepository) UpdateTask(ctx context.Context, task entity.Task) error {
+func (r *TaskRepository) UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error {
 	query := "UPDATE tasks SET name = $1, status = $2 WHERE id = $3"
 
-	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.ID)
+	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, id)
 	if err != nil {
 		return err
 	}

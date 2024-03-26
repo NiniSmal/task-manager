@@ -24,7 +24,7 @@ type Repository interface {
 	GetTaskByID(ctx context.Context, id int64) (entity.Task, error)
 	GetUserTasks(ctx context.Context, userID int64) ([]entity.Task, error)
 	GetTasks(ctx context.Context) ([]entity.Task, error)
-	UpdateTask(ctx context.Context, task entity.Task) error
+	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
 	GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (entity.User, error)
 }
 
@@ -82,26 +82,26 @@ func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 
 }
 
-func (s *TaskService) UpdateTask(ctx context.Context, task entity.Task) error {
+func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error {
 	user := ctx.Value("user").(entity.User)
 
 	if task.Status != entity.StatusDone && task.Status != entity.StatusNotDone {
 		return errors.New("status  is not correct")
 	}
 
-	_, err := s.repo.GetTaskByID(ctx, task.ID)
+	_, err := s.repo.GetTaskByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("get task by id: %w", err)
 	}
 
 	if user.Role == entity.RoleAdmin {
-		err = s.repo.UpdateTask(ctx, task)
+		err = s.repo.UpdateTask(ctx, id, task)
 		if err != nil {
 			return fmt.Errorf("update task: %w", err)
 		}
 	}
 	if user.ID == task.UserID {
-		err = s.repo.UpdateTask(ctx, task)
+		err = s.repo.UpdateTask(ctx, id, task)
 		if err != nil {
 			return fmt.Errorf("update task: %w", err)
 		}

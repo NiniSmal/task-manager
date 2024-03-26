@@ -52,20 +52,17 @@ func main() {
 	//для части обработчиков создаем группу с доп. middleware для авторизации, тк она нужна не для всех обработчиков
 	router.Group(func(r chi.Router) {
 		r.Use(mw.AuthHandler)
-		r.HandleFunc("/createTask", ht.CreateTask)
-		r.HandleFunc("/getTaskByID", ht.GetTaskByID)
-		r.HandleFunc("/getAllTasks", ht.GetAllTasks)
-		r.HandleFunc("/updateTask", ht.UpdateTask)
+		r.Post("/tasks", ht.CreateTask)
+		r.Get("/tasks/{id}", ht.GetTaskByID)
+		r.Get("/tasks", ht.GetAllTasks)
+		r.Put("/tasks/{id}", ht.UpdateTask)
 	})
 
-	router.HandleFunc("/createUser", hu.CreateUser)
-	router.HandleFunc("/login", hu.Login)
+	router.Post("/users", hu.CreateUser)
+	router.Post("/login", hu.Login)
 
 	err = http.ListenAndServe(ctg.Port, router)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
-
-//User(может обновлять только свои задачи) или Admin (может делать все, проверка не нужна). Если юзер не админ и задача не совпадает.
-//Поменять default  роль - при регистрации. Метод обновления задачи, метод получения задачи- поменять с  ролями.

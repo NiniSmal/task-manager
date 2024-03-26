@@ -14,3 +14,9 @@ type Task struct {
 	CreatedAt time.Time `json:"created_at"`
 	UserID    int64     `json:"user_id"`
 }
+
+type UpdateTask struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	UserID int64  `json:"user_id"`
+}
