@@ -25,7 +25,7 @@ func NewUserService(r UserRepository) *UserService {
 type UserRepository interface {
 	CreateUser(ctx context.Context, user entity.User) error
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
-	CheckUserByLogin(ctx context.Context, login string) (entity.User, error)
+	UserByLogin(ctx context.Context, login string) (entity.User, error)
 	Verification(ctx context.Context, user entity.User) error
 }
 
@@ -35,7 +35,7 @@ func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 		return fmt.Errorf("validation: %w", err)
 	}
 
-	_, err = u.repo.CheckUserByLogin(ctx, user.Login)
+	_, err = u.repo.UserByLogin(ctx, user.Login)
 	if err == nil {
 		return fmt.Errorf("this login already exists")
 	}
@@ -45,7 +45,7 @@ func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 
 	user.CreatedAt = time.Now()
 	user.Role = entity.RoleUser
-	user.Verification = false
+
 	code := uuid.NewString()
 
 	user.VerificationCode = code
@@ -71,10 +71,20 @@ func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 	return nil
 }
 
-func (u *UserService) Login(ctx context.Context, user entity.User) (uuid.UUID, error) {
+func (u *UserService) Login(ctx context.Context, data entity.User) (uuid.UUID, error) {
+	user, err := u.repo.UserByLogin(ctx, data.Login)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("get user by login: %w", err)
+	}
+	if user.Password != data.Password {
+		return uuid.UUID{}, entity.ErrNotAuthenticated
+	}
+	if !user.Verification {
+		return uuid.UUID{}, entity.ErrNotVerification
+	}
 	sessionID := uuid.New()
 
-	err := u.repo.SaveSession(ctx, sessionID, user)
+	err = u.repo.SaveSession(ctx, sessionID, user)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("save session: %w", err)
 	}
@@ -84,7 +94,7 @@ func (u *UserService) Login(ctx context.Context, user entity.User) (uuid.UUID, e
 func (u *UserService) Verification(ctx context.Context, user entity.User) error {
 	err := u.repo.Verification(ctx, user)
 	if err != nil {
-		fmt.Errorf("verification: %w", err)
+		return entity.ErrNotVerification
 	}
 	return nil
 }

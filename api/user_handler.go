@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"net/http"
@@ -53,13 +52,8 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Verification != true {
-		w.Write([]byte("user isn't verification"))
-		fmt.Println(entity.ErrNotVerification)
-		return
-	}
-
 	sessionID, err := u.service.Login(r.Context(), user)
+
 	if err != nil {
 		HandlerError(w, err)
 		return
