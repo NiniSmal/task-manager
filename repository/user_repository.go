@@ -19,9 +19,9 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(ctx context.Context, user entity.User) error {
-	query := "INSERT INTO users ( login, password, created_at, role ) VALUES ($1, $2, $3, $4)"
+	query := "INSERT INTO users ( login, password, created_at, role, verification, verification_code ) VALUES ($1, $2, $3, $4, $5, $6)"
 
-	_, err := r.db.ExecContext(ctx, query, user.Login, user.Password, user.CreatedAt, user.Role)
+	_, err := r.db.ExecContext(ctx, query, user.Login, user.Password, user.CreatedAt, user.Role, user.Verification, user.VerificationCode)
 	if err != nil {
 		return err
 	}
@@ -52,4 +52,13 @@ func (r *UserRepository) CheckUserByLogin(ctx context.Context, login string) (en
 		return entity.User{}, err
 	}
 	return user, nil
+}
+
+func (r *UserRepository) Verification(ctx context.Context, user entity.User) error {
+	query := "UPDATE users SET verification = $1 WHERE verification_code = $2 "
+	_, err := r.db.ExecContext(ctx, query, user.Verification, user.VerificationCode)
+	if err != nil {
+		return err
+	}
+	return nil
 }
