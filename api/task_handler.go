@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/go-chi/chi/v5"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"log"
@@ -28,8 +29,16 @@ type TaskService interface {
 }
 
 func HandlerError(w http.ResponseWriter, err error) {
-	log.Println(err)
-	w.Write([]byte("The problem is in program"))
+	log.Println("API error:", err)
+
+	switch {
+	case errors.Is(err, entity.ErrNotVerification):
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+	case errors.Is(err, entity.ErrNotAuthenticated):
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+	default:
+		http.Error(w, "The problem is in program", http.StatusInternalServerError)
+	}
 }
 
 func (h *TaskHandler) HandlerAnswerEncode(w http.ResponseWriter, body any) error {

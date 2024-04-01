@@ -60,6 +60,7 @@ func main() {
 
 	router.Post("/users", hu.CreateUser)
 	router.Post("/login", hu.Login)
+	router.Get("/verification", hu.Verification)
 
 	err = http.ListenAndServe(ctg.Port, router)
 	if err != nil {
