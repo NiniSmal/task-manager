@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"net/http"
@@ -78,19 +79,20 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (u *UserHandler) Verification(w http.ResponseWriter, r *http.Request) {
 	var user entity.User
+
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		HandlerError(w, errors.New("code is empty"))
 		return
 	}
-	user.VerificationCode = code
 
+	user.VerificationCode = code
 	user.Verification = true
+
 	err := u.service.Verification(r.Context(), user)
 	if err != nil {
 		HandlerError(w, err)
 	}
 
+	_, _ = fmt.Fprintln(w, "verification successful, now you can login")
 }
-
-//в логине добавь что если юзер не активен - то ошибочку ему верни что не верифицирован

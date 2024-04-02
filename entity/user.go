@@ -27,7 +27,7 @@ type User struct {
 func (user *User) Validate() error {
 	const (
 		minLogin = 1
-		maxLogin = 15
+		maxLogin = 200
 	)
 
 	rl := utf8.RuneCountInString(user.Login)

@@ -94,7 +94,7 @@ func (u *UserService) Login(ctx context.Context, data entity.User) (uuid.UUID, e
 func (u *UserService) Verification(ctx context.Context, user entity.User) error {
 	err := u.repo.Verification(ctx, user)
 	if err != nil {
-		return entity.ErrNotVerification
+		return fmt.Errorf("%w, follow the link in the email to verify", entity.ErrNotVerification)
 	}
 	return nil
 }
