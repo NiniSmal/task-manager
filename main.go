@@ -2,13 +2,17 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
+	gen "gitlab.com/nina8884807/mail/proto"
 	"gitlab.com/nina8884807/task-manager/api"
 	"gitlab.com/nina8884807/task-manager/config"
 	"gitlab.com/nina8884807/task-manager/repository"
 	"gitlab.com/nina8884807/task-manager/service"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net/http"
 )
@@ -38,11 +42,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	con, err := grpc.Dial("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		fmt.Errorf("dial: %w", err)
+	}
+	mailClient := gen.NewMailClient(con)
+
 	rt := repository.NewTaskRepository(db)
 	st := service.NewTaskService(rt)
 	ht := api.NewTaskHandler(st)
 	ut := repository.NewUserRepository(db)
-	su := service.NewUserService(ut)
+	su := service.NewUserService(ut, mailClient)
 	hu := api.NewUserHandler(su)
 	//midll такой же обработчик, поэтому так же принимает репозиторий
 	mw := api.NewMiddleware(rt)

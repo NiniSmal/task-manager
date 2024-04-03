@@ -22,9 +22,9 @@ func NewUserHandler(u UserService) *UserHandler {
 }
 
 type UserService interface {
-	CreateUser(ctx context.Context, user entity.User) error
-	Login(ctx context.Context, user entity.User) (uuid.UUID, error)
-	Verification(ctx context.Context, user entity.User) error
+	CreateUser(ctx context.Context, login, password string) error
+	Login(ctx context.Context, login, password string) (uuid.UUID, error)
+	Verification(ctx context.Context, verificationCode string, verification bool) error
 }
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +36,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = u.service.CreateUser(r.Context(), user)
+	err = u.service.CreateUser(r.Context(), user.Login, user.Password)
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -53,7 +53,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := u.service.Login(r.Context(), user)
+	sessionID, err := u.service.Login(r.Context(), user.Login, user.Password)
 
 	if err != nil {
 		HandlerError(w, err)
@@ -89,7 +89,7 @@ func (u *UserHandler) Verification(w http.ResponseWriter, r *http.Request) {
 	user.VerificationCode = code
 	user.Verification = true
 
-	err := u.service.Verification(r.Context(), user)
+	err := u.service.Verification(r.Context(), user.VerificationCode, user.Verification)
 	if err != nil {
 		HandlerError(w, err)
 	}
