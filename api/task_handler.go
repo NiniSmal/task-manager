@@ -67,7 +67,6 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
-	//idR := r.URL.Query().Get("id")
 	idR := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idR)
 	if err != nil {

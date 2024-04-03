@@ -7,18 +7,18 @@ import (
 	"github.com/google/uuid"
 	gen "gitlab.com/nina8884807/mail/proto"
 	"gitlab.com/nina8884807/task-manager/entity"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"time"
 )
 
 type UserService struct {
-	repo UserRepository
+	repo   UserRepository
+	client gen.MailClient
 }
 
-func NewUserService(r UserRepository) *UserService {
+func NewUserService(r UserRepository, mc gen.MailClient) *UserService {
 	return &UserService{
-		repo: r,
+		repo:   r,
+		client: mc,
 	}
 }
 
@@ -26,16 +26,19 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user entity.User) error
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
 	UserByLogin(ctx context.Context, login string) (entity.User, error)
-	Verification(ctx context.Context, user entity.User) error
+	Verification(ctx context.Context, verificationCode string, verification bool) error
 }
 
-func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
+func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
+	var user entity.User
+	user.Login, user.Password = login, password
+
 	err := user.Validate()
 	if err != nil {
 		return fmt.Errorf("validation: %w", err)
 	}
 
-	_, err = u.repo.UserByLogin(ctx, user.Login)
+	_, err = u.repo.UserByLogin(ctx, login)
 	if err == nil {
 		return fmt.Errorf("this login already exists")
 	}
@@ -55,12 +58,7 @@ func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 		return fmt.Errorf("create user: %w", err)
 	}
 
-	con, err := grpc.Dial("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return fmt.Errorf("dial: %w", err)
-	}
-	mailClient := gen.NewMailClient(con)
-	_, err = mailClient.SendEmail(ctx, &gen.SendEmailRequest{
+	_, err = u.client.SendEmail(ctx, &gen.SendEmailRequest{
 		Text: "http://localhost:8021/verification?code=" + code,
 		To:   user.Login,
 	})
@@ -71,12 +69,12 @@ func (u *UserService) CreateUser(ctx context.Context, user entity.User) error {
 	return nil
 }
 
-func (u *UserService) Login(ctx context.Context, data entity.User) (uuid.UUID, error) {
-	user, err := u.repo.UserByLogin(ctx, data.Login)
+func (u *UserService) Login(ctx context.Context, login, password string) (uuid.UUID, error) {
+	user, err := u.repo.UserByLogin(ctx, login)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("get user by login: %w", err)
 	}
-	if user.Password != data.Password {
+	if user.Password != password {
 		return uuid.UUID{}, entity.ErrNotAuthenticated
 	}
 	if !user.Verification {
@@ -91,8 +89,8 @@ func (u *UserService) Login(ctx context.Context, data entity.User) (uuid.UUID, e
 	return sessionID, nil
 }
 
-func (u *UserService) Verification(ctx context.Context, user entity.User) error {
-	err := u.repo.Verification(ctx, user)
+func (u *UserService) Verification(ctx context.Context, verificationCode string, verification bool) error {
+	err := u.repo.Verification(ctx, verificationCode, verification)
 	if err != nil {
 		return fmt.Errorf("%w, follow the link in the email to verify", entity.ErrNotVerification)
 	}

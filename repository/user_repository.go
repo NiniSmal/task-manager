@@ -54,9 +54,9 @@ func (r *UserRepository) UserByLogin(ctx context.Context, login string) (entity.
 	return user, nil
 }
 
-func (r *UserRepository) Verification(ctx context.Context, user entity.User) error {
+func (r *UserRepository) Verification(ctx context.Context, verificationCode string, verification bool) error {
 	query := "UPDATE users SET verification = $1 WHERE verification_code = $2 "
-	_, err := r.db.ExecContext(ctx, query, user.Verification, user.VerificationCode)
+	_, err := r.db.ExecContext(ctx, query, verification, verificationCode)
 	if err != nil {
 		return err
 	}
