@@ -30,8 +30,16 @@ type UserRepository interface {
 }
 
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
-	var user entity.User
-	user.Login, user.Password = login, password
+	code := uuid.NewString()
+
+	user := entity.User{
+		Login:            login,
+		Password:         password,
+		CreatedAt:        time.Now(),
+		Role:             entity.RoleUser,
+		Verification:     false,
+		VerificationCode: code,
+	}
 
 	err := user.Validate()
 	if err != nil {
@@ -45,13 +53,6 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 	if !errors.Is(err, entity.ErrNotFound) {
 		return fmt.Errorf("get user by login: %w", err)
 	}
-
-	user.CreatedAt = time.Now()
-	user.Role = entity.RoleUser
-
-	code := uuid.NewString()
-
-	user.VerificationCode = code
 
 	err = u.repo.CreateUser(ctx, user)
 	if err != nil {
