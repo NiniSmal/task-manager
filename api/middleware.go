@@ -49,6 +49,12 @@ func (m *Middleware) AuthHandler(next http.Handler) http.Handler {
 			return
 		}
 
+		_, err = m.repo.GetUserSession(ctx, sessionID)
+		if err != nil {
+			HandlerError(w, err)
+			return
+		}
+
 		user, err := m.repo.GetUserIDBySessionID(ctx, sessionID) //в таблице связи  возвращаем нужный userID
 		if err != nil {
 			HandlerError(w, err)

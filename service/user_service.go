@@ -27,18 +27,17 @@ type UserRepository interface {
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
 	UserByLogin(ctx context.Context, login string) (entity.User, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) error
+	SetUserSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
 }
 
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
-	code := uuid.NewString()
-
 	user := entity.User{
 		Login:            login,
 		Password:         password,
 		CreatedAt:        time.Now(),
 		Role:             entity.RoleUser,
 		Verification:     false,
-		VerificationCode: code,
+		VerificationCode: uuid.NewString(),
 	}
 
 	err := user.Validate()
@@ -60,7 +59,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 	}
 
 	_, err = u.client.SendEmail(ctx, &gen.SendEmailRequest{
-		Text: "http://localhost:8021/verification?code=" + code,
+		Text: "http://localhost:8021/verification?code=" + user.VerificationCode,
 		To:   user.Login,
 	})
 	if err != nil {
@@ -86,6 +85,11 @@ func (u *UserService) Login(ctx context.Context, login, password string) (uuid.U
 	err = u.repo.SaveSession(ctx, sessionID, user)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("save session: %w", err)
+	}
+
+	err = u.repo.SetUserSession(ctx, sessionID, user)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("set session %w", err)
 	}
 	return sessionID, nil
 }

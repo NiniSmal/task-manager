@@ -3,17 +3,21 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
 
 type TaskRepository struct {
-	db *sql.DB
+	db  *sql.DB
+	rds *redis.Client
 }
 
-func NewTaskRepository(db *sql.DB) *TaskRepository {
+func NewTaskRepository(db *sql.DB, rds *redis.Client) *TaskRepository {
 	return &TaskRepository{
-		db: db,
+		db:  db,
+		rds: rds,
 	}
 }
 func (r *TaskRepository) SaveTask(ctx context.Context, task entity.Task) error {
@@ -28,11 +32,11 @@ func (r *TaskRepository) SaveTask(ctx context.Context, task entity.Task) error {
 }
 
 func (r *TaskRepository) GetTaskByID(ctx context.Context, id int64) (entity.Task, error) {
-	query := "SELECT id, name, status, created_at FROM tasks WHERE id=$1"
+	query := "SELECT id, name, status, created_at, user_id FROM tasks WHERE id=$1"
 
 	var task entity.Task
 
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt, &task.UserID)
 	if err != nil {
 		return entity.Task{}, err
 	}
@@ -109,4 +113,20 @@ func (r *TaskRepository) GetUserIDBySessionID(ctx context.Context, sessionID uui
 		return entity.User{}, err
 	}
 	return user, nil
+}
+
+func (r *TaskRepository) GetUserSession(ctx context.Context, sessionID uuid.UUID) (entity.User, error) {
+	var user string
+
+	err := r.rds.Get(ctx, sessionID.String()).Scan(&user)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	var usRep entity.User
+	err = json.Unmarshal([]byte(user), &usRep)
+	if err != nil {
+		return entity.User{}, err
+	}
+	return usRep, nil
 }

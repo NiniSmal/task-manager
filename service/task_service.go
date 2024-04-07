@@ -26,6 +26,7 @@ type Repository interface {
 	GetTasks(ctx context.Context) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
 	GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (entity.User, error)
+	GetUserSession(ctx context.Context, sessionID uuid.UUID) (entity.User, error)
 }
 
 func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
