@@ -91,9 +91,7 @@ func (r *UserRepository) GetSession(ctx context.Context, sessionID uuid.UUID) (e
 		return user, nil
 	}
 
-	if !errors.Is(err, entity.ErrNotFound) {
-		log.Printf("get session from cache: %s ", err)
-	}
+	log.Printf("get session from cache: %s ", err)
 
 	query := "SELECT user_id, login, created_at, verification, role FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.id = $1"
 
