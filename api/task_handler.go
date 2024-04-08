@@ -68,13 +68,13 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	idR := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idR)
+	id, err := strconv.ParseInt(idR, 10, 64)
 	if err != nil {
 		HandlerError(w, err)
 		return
 	}
 
-	task, err := h.service.GetTask(r.Context(), int64(id))
+	task, err := h.service.GetTask(r.Context(), id)
 	if err != nil {
 		HandlerError(w, err)
 		return

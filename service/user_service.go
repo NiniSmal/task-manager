@@ -30,15 +30,13 @@ type UserRepository interface {
 }
 
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
-	code := uuid.NewString()
-
 	user := entity.User{
 		Login:            login,
 		Password:         password,
 		CreatedAt:        time.Now(),
 		Role:             entity.RoleUser,
 		Verification:     false,
-		VerificationCode: code,
+		VerificationCode: uuid.NewString(),
 	}
 
 	err := user.Validate()
@@ -60,7 +58,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 	}
 
 	_, err = u.client.SendEmail(ctx, &gen.SendEmailRequest{
-		Text: "http://localhost:8021/verification?code=" + code,
+		Text: "http://localhost:8021/verification?code=" + user.VerificationCode,
 		To:   user.Login,
 	})
 	if err != nil {
@@ -87,6 +85,7 @@ func (u *UserService) Login(ctx context.Context, login, password string) (uuid.U
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("save session: %w", err)
 	}
+
 	return sessionID, nil
 }
 

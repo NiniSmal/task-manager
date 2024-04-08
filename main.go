@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
+	"github.com/redis/go-redis/v9"
 	gen "gitlab.com/nina8884807/mail/proto"
 	"gitlab.com/nina8884807/task-manager/api"
 	"gitlab.com/nina8884807/task-manager/config"
@@ -32,9 +34,28 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println("db - OK")
+	defer db.Close()
+
+	ctx := context.Background()
+	rds := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	pong, err := rds.Ping(ctx).Result()
+	if err != nil {
+		log.Fatal("Error connecting to Redis:", err)
+	}
+	fmt.Println("Connected to Redis:", pong)
+
+	err = rds.Set(ctx, "key", "value", 0).Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rds.Close()
 
 	//make migrations
-
 	log.Printf("Start migrating database \n")
 	//применяем все возможные миграции
 	err = goose.Up(db, "migrations")
@@ -48,14 +69,14 @@ func main() {
 	}
 	mailClient := gen.NewMailClient(con)
 
-	rt := repository.NewTaskRepository(db)
+	rt := repository.NewTaskRepository(db, rds)
 	st := service.NewTaskService(rt)
 	ht := api.NewTaskHandler(st)
-	ut := repository.NewUserRepository(db)
+	ut := repository.NewUserRepository(db, rds)
 	su := service.NewUserService(ut, mailClient)
 	hu := api.NewUserHandler(su)
 	//midll такой же обработчик, поэтому так же принимает репозиторий
-	mw := api.NewMiddleware(rt)
+	mw := api.NewMiddleware(ut)
 	router := chi.NewRouter()
 
 	router.Use(api.Logging, api.ResponseHeader)
