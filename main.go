@@ -76,7 +76,7 @@ func main() {
 	su := service.NewUserService(ut, mailClient)
 	hu := api.NewUserHandler(su)
 	//midll такой же обработчик, поэтому так же принимает репозиторий
-	mw := api.NewMiddleware(rt)
+	mw := api.NewMiddleware(ut)
 	router := chi.NewRouter()
 
 	router.Use(api.Logging, api.ResponseHeader)

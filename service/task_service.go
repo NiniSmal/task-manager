@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"time"
 )
@@ -25,8 +24,6 @@ type Repository interface {
 	GetUserTasks(ctx context.Context, userID int64) ([]entity.Task, error)
 	GetTasks(ctx context.Context) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
-	GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (entity.User, error)
-	GetUserSession(ctx context.Context, sessionID uuid.UUID) (entity.User, error)
 }
 
 func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {

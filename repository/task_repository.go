@@ -3,8 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
-	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
@@ -101,32 +99,4 @@ func (r *TaskRepository) UpdateTask(ctx context.Context, id int64, task entity.U
 		return err
 	}
 	return nil
-}
-
-func (r *TaskRepository) GetUserIDBySessionID(ctx context.Context, sessionID uuid.UUID) (entity.User, error) {
-	query := "SELECT user_id, role FROM sessions WHERE id = $1"
-
-	var user entity.User
-
-	err := r.db.QueryRowContext(ctx, query, sessionID).Scan(&user.ID, &user.Role)
-	if err != nil {
-		return entity.User{}, err
-	}
-	return user, nil
-}
-
-func (r *TaskRepository) GetUserSession(ctx context.Context, sessionID uuid.UUID) (entity.User, error) {
-	var user string
-
-	err := r.rds.Get(ctx, sessionID.String()).Scan(&user)
-	if err != nil {
-		return entity.User{}, err
-	}
-
-	var usRep entity.User
-	err = json.Unmarshal([]byte(user), &usRep)
-	if err != nil {
-		return entity.User{}, err
-	}
-	return usRep, nil
 }

@@ -27,7 +27,6 @@ type UserRepository interface {
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
 	UserByLogin(ctx context.Context, login string) (entity.User, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) error
-	SetUserSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
 }
 
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
@@ -87,10 +86,6 @@ func (u *UserService) Login(ctx context.Context, login, password string) (uuid.U
 		return uuid.UUID{}, fmt.Errorf("save session: %w", err)
 	}
 
-	err = u.repo.SetUserSession(ctx, sessionID, user)
-	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("set session %w", err)
-	}
 	return sessionID, nil
 }
 

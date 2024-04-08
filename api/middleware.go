@@ -3,19 +3,23 @@ package api
 import (
 	"context"
 	"github.com/google/uuid"
-	"gitlab.com/nina8884807/task-manager/repository"
+	"gitlab.com/nina8884807/task-manager/entity"
 	"log"
 	"net/http"
 )
 
 type Middleware struct {
-	repo *repository.TaskRepository
+	repo SessionRepository
 }
 
-func NewMiddleware(r *repository.TaskRepository) *Middleware {
+func NewMiddleware(r SessionRepository) *Middleware {
 	return &Middleware{
 		repo: r,
 	}
+}
+
+type SessionRepository interface {
+	GetSession(ctx context.Context, sessionID uuid.UUID) (entity.User, error)
 }
 
 func Logging(next http.Handler) http.Handler {
@@ -49,13 +53,7 @@ func (m *Middleware) AuthHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		_, err = m.repo.GetUserSession(ctx, sessionID)
-		if err != nil {
-			HandlerError(w, err)
-			return
-		}
-
-		user, err := m.repo.GetUserIDBySessionID(ctx, sessionID) //в таблице связи  возвращаем нужный userID
+		user, err := m.repo.GetSession(ctx, sessionID) //в таблице связи  возвращаем нужный userID
 		if err != nil {
 			HandlerError(w, err)
 			return
@@ -66,16 +64,3 @@ func (m *Middleware) AuthHandler(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-//добавляет заголовок к ответу.
-
-//type ResponseHeader struct {
-//	handler     http.Handler
-//	headerName  string
-//	headerValue string
-//}
-
-// обработчик
-//func NewResponseHeader(handlerToWrap http.Handler, headerName string, headerValue string) *ResponseHeader {
-//	return &ResponseHeader{handlerToWrap, headerName, headerValue}
-//}
