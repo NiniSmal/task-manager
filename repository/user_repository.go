@@ -9,6 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"log"
+	"time"
 )
 
 type UserRepository struct {
@@ -53,7 +54,7 @@ func (r *UserRepository) saveSessionToCache(ctx context.Context, sessionID uuid.
 		return err
 	}
 
-	_, err = r.rds.Set(ctx, sessionID.String(), us, 0).Result()
+	_, err = r.rds.Set(ctx, sessionID.String(), us, time.Hour).Result()
 	if err != nil {
 		return err
 	}
