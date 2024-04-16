@@ -20,8 +20,10 @@ require (
 	github.com/klauspost/compress v1.17.2 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
+	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/redis/go-redis/v9 v9.0.0-rc.4 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
+	github.com/segmentio/kafka-go v0.4.47 // indirect
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/vmihailenco/go-tinylfu v0.2.2 // indirect
