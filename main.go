@@ -49,10 +49,6 @@ func main() {
 	}
 	fmt.Println("Connected to Redis:", pong)
 
-	err = rds.Set(ctx, "key", "value", 0).Err()
-	if err != nil {
-		log.Fatal(err)
-	}
 	defer rds.Close()
 
 	//make migrations

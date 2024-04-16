@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/segmentio/kafka-go"
 	gen "gitlab.com/nina8884807/mail/proto"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"time"
@@ -57,12 +59,36 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		return fmt.Errorf("create user: %w", err)
 	}
 
-	_, err = u.client.SendEmail(ctx, &gen.SendEmailRequest{
+	w := &kafka.Writer{
+		Addr:     kafka.TCP("localhost:9092"),
+		Topic:    "topic-A",
+		Balancer: &kafka.LeastBytes{},
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to set write deadline: , %w", err)
+	}
+	message := gen.SendEmailRequest{
 		Text: "http://localhost:8021/verification?code=" + user.VerificationCode,
 		To:   user.Login,
-	})
+	}
+
+	msg, err := json.Marshal(&message)
 	if err != nil {
-		return fmt.Errorf("send email: %w", err)
+		return fmt.Errorf("failed to marshal message: ,%w", err)
+	}
+
+	err = w.WriteMessages(ctx,
+		kafka.Message{
+			Value: msg,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to write messages: , %w", err)
+	}
+
+	if err := w.Close(); err != nil {
+		return fmt.Errorf("failed to close writer: %w", err)
 	}
 
 	return nil
