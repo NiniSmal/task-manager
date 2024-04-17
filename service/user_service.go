@@ -15,12 +15,14 @@ import (
 type UserService struct {
 	repo   UserRepository
 	client gen.MailClient
+	kafka  *kafka.Writer
 }
 
-func NewUserService(r UserRepository, mc gen.MailClient) *UserService {
+func NewUserService(r UserRepository, mc gen.MailClient, w *kafka.Writer) *UserService {
 	return &UserService{
 		repo:   r,
 		client: mc,
+		kafka:  w,
 	}
 }
 
@@ -59,15 +61,6 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		return fmt.Errorf("create user: %w", err)
 	}
 
-	w := &kafka.Writer{
-		Addr:     kafka.TCP("localhost:9092"),
-		Topic:    "topic-A",
-		Balancer: &kafka.LeastBytes{},
-	}
-
-	if err != nil {
-		return fmt.Errorf("failed to set write deadline: , %w", err)
-	}
 	message := gen.SendEmailRequest{
 		Text: "http://localhost:8021/verification?code=" + user.VerificationCode,
 		To:   user.Login,
@@ -78,17 +71,13 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		return fmt.Errorf("failed to marshal message: ,%w", err)
 	}
 
-	err = w.WriteMessages(ctx,
+	err = u.kafka.WriteMessages(ctx,
 		kafka.Message{
 			Value: msg,
 		},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to write messages: , %w", err)
-	}
-
-	if err := w.Close(); err != nil {
-		return fmt.Errorf("failed to close writer: %w", err)
 	}
 
 	return nil
