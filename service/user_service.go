@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/segmentio/kafka-go"
 	gen "gitlab.com/nina8884807/mail/proto"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"time"
@@ -13,12 +15,14 @@ import (
 type UserService struct {
 	repo   UserRepository
 	client gen.MailClient
+	kafka  *kafka.Writer
 }
 
-func NewUserService(r UserRepository, mc gen.MailClient) *UserService {
+func NewUserService(r UserRepository, mc gen.MailClient, w *kafka.Writer) *UserService {
 	return &UserService{
 		repo:   r,
 		client: mc,
+		kafka:  w,
 	}
 }
 
@@ -57,12 +61,23 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		return fmt.Errorf("create user: %w", err)
 	}
 
-	_, err = u.client.SendEmail(ctx, &gen.SendEmailRequest{
+	message := gen.SendEmailRequest{
 		Text: "http://localhost:8021/verification?code=" + user.VerificationCode,
 		To:   user.Login,
-	})
+	}
+
+	msg, err := json.Marshal(&message)
 	if err != nil {
-		return fmt.Errorf("send email: %w", err)
+		return fmt.Errorf("failed to marshal message: ,%w", err)
+	}
+
+	err = u.kafka.WriteMessages(ctx,
+		kafka.Message{
+			Value: msg,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to write messages: , %w", err)
 	}
 
 	return nil

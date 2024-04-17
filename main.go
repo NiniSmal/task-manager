@@ -8,6 +8,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
+	"github.com/segmentio/kafka-go"
 	gen "gitlab.com/nina8884807/mail/proto"
 	"gitlab.com/nina8884807/task-manager/api"
 	"gitlab.com/nina8884807/task-manager/config"
@@ -49,10 +50,6 @@ func main() {
 	}
 	fmt.Println("Connected to Redis:", pong)
 
-	err = rds.Set(ctx, "key", "value", 0).Err()
-	if err != nil {
-		log.Fatal(err)
-	}
 	defer rds.Close()
 
 	//make migrations
@@ -69,11 +66,18 @@ func main() {
 	}
 	mailClient := gen.NewMailClient(con)
 
+	kafkaWriter := &kafka.Writer{
+		Addr:     kafka.TCP("localhost:9092"),
+		Topic:    "topic-A",
+		Balancer: &kafka.LeastBytes{},
+	}
+	defer kafkaWriter.Close()
+
 	rt := repository.NewTaskRepository(db, rds)
 	st := service.NewTaskService(rt)
 	ht := api.NewTaskHandler(st)
 	ut := repository.NewUserRepository(db, rds)
-	su := service.NewUserService(ut, mailClient)
+	su := service.NewUserService(ut, mailClient, kafkaWriter)
 	hu := api.NewUserHandler(su)
 	//midll такой же обработчик, поэтому так же принимает репозиторий
 	mw := api.NewMiddleware(ut)
