@@ -15,10 +15,10 @@ import (
 type UserService struct {
 	repo   UserRepository
 	client gen.MailClient
-	kafka  *kafka.Writer
+	kafka  *kafka.Conn
 }
 
-func NewUserService(r UserRepository, mc gen.MailClient, w *kafka.Writer) *UserService {
+func NewUserService(r UserRepository, mc gen.MailClient, w *kafka.Conn) *UserService {
 	return &UserService{
 		repo:   r,
 		client: mc,
@@ -71,7 +71,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		return fmt.Errorf("failed to marshal message: ,%w", err)
 	}
 
-	err = u.kafka.WriteMessages(ctx,
+	_, err = u.kafka.WriteMessages(
 		kafka.Message{
 			Value: msg,
 		},

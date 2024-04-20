@@ -21,12 +21,18 @@ import (
 )
 
 func main() {
-	ctg, err := config.GetConfig()
+	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
-	//подключение к бд
-	db, err := sql.Open("postgres", ctg.Postgres)
+
+	err = cfg.Validation()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("%+v", cfg)
+
+	db, err := sql.Open("postgres", cfg.Postgres)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,7 +45,7 @@ func main() {
 
 	ctx := context.Background()
 	rds := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     cfg.RedisAddr,
 		Password: "",
 		DB:       0,
 	})
@@ -60,24 +66,34 @@ func main() {
 		log.Fatal(err)
 	}
 
-	con, err := grpc.Dial("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	connKafka, err := kafka.DialLeader(ctx, "tcp", cfg.KafkaAddr, cfg.KafkaTopicCreateUser, 0)
 	if err != nil {
-		fmt.Errorf("dial: %w", err)
+		log.Fatal("dial kafka:", err)
+	}
+
+	defer connKafka.Close()
+
+	//err = connKafka.CreateTopics(kafka.TopicConfig{
+	//	Topic:             cfg.KafkaTopicCreateUser,
+	//	NumPartitions:     1,
+	//	ReplicationFactor: 1,
+	//})
+	//if err != nil {
+	//	log.Fatal("create topic:", err)
+	//}
+
+	con, err := grpc.Dial(cfg.MailServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal("dial: %w", err)
 	}
 	mailClient := gen.NewMailClient(con)
-
-	kafkaWriter := &kafka.Writer{
-		Addr:     kafka.TCP("localhost:9092"),
-		Topic:    "topic-A",
-		Balancer: &kafka.LeastBytes{},
-	}
-	defer kafkaWriter.Close()
+	defer con.Close()
 
 	rt := repository.NewTaskRepository(db, rds)
 	st := service.NewTaskService(rt)
 	ht := api.NewTaskHandler(st)
 	ut := repository.NewUserRepository(db, rds)
-	su := service.NewUserService(ut, mailClient, kafkaWriter)
+	su := service.NewUserService(ut, mailClient, connKafka)
 	hu := api.NewUserHandler(su)
 	//midll такой же обработчик, поэтому так же принимает репозиторий
 	mw := api.NewMiddleware(ut)
@@ -97,7 +113,8 @@ func main() {
 	router.Post("/login", hu.Login)
 	router.Get("/verification", hu.Verification)
 
-	err = http.ListenAndServe(ctg.Port, router)
+	log.Println("start http server at port", cfg.Port)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), router)
 	if err != nil {
 		log.Fatal(err)
 	}
