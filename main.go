@@ -113,7 +113,7 @@ func main() {
 	router.Post("/login", hu.Login)
 	router.Get("/verification", hu.Verification)
 
-	log.Println("start http server at port", cfg.Port)
+	log.Println("start http server at port:", cfg.Port)
 	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), router)
 	if err != nil {
 		log.Fatal(err)
