@@ -14,6 +14,11 @@ const (
 	RoleAdmin Role = "admin"
 )
 
+const (
+	minLogin = 5
+	maxLogin = 200
+)
+
 type User struct {
 	ID               int64     `json:"id"`
 	Login            string    `json:"login"`
@@ -25,16 +30,13 @@ type User struct {
 }
 
 func (user *User) Validate() error {
-	const (
-		minLogin = 1
-		maxLogin = 200
-	)
-
 	rl := utf8.RuneCountInString(user.Login)
-	if rl < minLogin || rl > maxLogin {
-		return fmt.Errorf("the login must be minimum %d symbol and not more %d symbols", minLogin, maxLogin)
+	if rl < minLogin {
+		return fmt.Errorf("the login must be minimum %d symbols", minLogin)
 	}
-
+	if rl > maxLogin {
+		return fmt.Errorf("the login can be max %d symbols", maxLogin)
+	}
 	if user.Password == "" {
 		return errors.New("the password can't be empty")
 	}
