@@ -50,7 +50,7 @@ func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error
 
 	task, err := s.repo.GetTaskByID(ctx, id)
 	if err != nil {
-		return entity.Task{}, fmt.Errorf("get task by %f: %w", id, err)
+		return entity.Task{}, fmt.Errorf("get task by %d: %w", id, err)
 	}
 	if user.Role == entity.RoleAdmin {
 		return task, nil
@@ -58,7 +58,7 @@ func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error
 	if task.UserID == user.ID {
 		return task, nil
 	} else {
-		return entity.Task{}, fmt.Errorf("get task by %f: %w", id, err)
+		return entity.Task{}, fmt.Errorf("get task by %d: %w", id, err)
 	}
 }
 
