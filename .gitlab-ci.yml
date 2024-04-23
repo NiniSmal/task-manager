@@ -3,6 +3,7 @@ image: golang:1.21
 stages:
   - test
   - build
+  - deploy
 
 run-test:
   stage: test
@@ -12,7 +13,10 @@ build-app:
   stage: build
   script: go build -o tmanager .
 
-
+deploy-to-server:
+  stage: deploy
+  only: [main]
+  script: echo "hello from deploy"
 
 
 
