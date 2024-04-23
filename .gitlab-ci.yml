@@ -8,17 +8,11 @@ run-test:
   stage: test
   script: go test -v  ./...
 
-another-test:
-  stage: test
-  script: echo "hello another-test"
-
 build-app:
   stage: build
   script: go build -o tmanager .
 
-another-build:
-  stage: build
-  script: echo "hello another-build"
+
 
 
 
