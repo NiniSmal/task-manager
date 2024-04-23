@@ -16,6 +16,7 @@ build-app:
 deploy-to-server:
   stage: deploy
   only: [main]
+  when: manual
   script: echo "hello from deploy"
 
 
