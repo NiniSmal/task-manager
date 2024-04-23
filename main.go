@@ -9,13 +9,10 @@ import (
 	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
-	gen "gitlab.com/nina8884807/mail/proto"
 	"gitlab.com/nina8884807/task-manager/api"
 	"gitlab.com/nina8884807/task-manager/config"
 	"gitlab.com/nina8884807/task-manager/repository"
 	"gitlab.com/nina8884807/task-manager/service"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net/http"
 )
@@ -82,18 +79,11 @@ func main() {
 	//	log.Fatal("create topic:", err)
 	//}
 
-	con, err := grpc.Dial(cfg.MailServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatal("dial: %w", err)
-	}
-	mailClient := gen.NewMailClient(con)
-	defer con.Close()
-
 	rt := repository.NewTaskRepository(db, rds)
 	st := service.NewTaskService(rt)
 	ht := api.NewTaskHandler(st)
 	ut := repository.NewUserRepository(db, rds)
-	su := service.NewUserService(ut, mailClient, connKafka)
+	su := service.NewUserService(ut, connKafka)
 	hu := api.NewUserHandler(su)
 	//midll такой же обработчик, поэтому так же принимает репозиторий
 	mw := api.NewMiddleware(ut)
