@@ -87,7 +87,7 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 		return errors.New("status  is not correct")
 	}
 
-	_, err := s.repo.GetTaskByID(ctx, id)
+	taskOld, err := s.repo.GetTaskByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("get task by id: %w", err)
 	}
@@ -98,7 +98,7 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 			return fmt.Errorf("update task: %w", err)
 		}
 	}
-	if user.ID == task.UserID {
+	if user.ID == taskOld.UserID {
 		err = s.repo.UpdateTask(ctx, id, task)
 		if err != nil {
 			return fmt.Errorf("update task: %w", err)

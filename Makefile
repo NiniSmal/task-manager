@@ -7,8 +7,8 @@ db-up:
 redis-up:
 	docker rm -f tmanager-redis && docker run -d -p 6379:6379 --network app --name tmanager-redis redis
 
-kafka:
-	docker rm -f tmanager-kafka && docker run -d -p 9097:9092 --name tmanager-kafka --hostname tmanager-kafka \
+kafka-docker:
+	docker rm -f tmanager-kafka && docker run -d -p 9092:9092 --name tmanager-kafka --hostname localhost \
                                        --network app \
                                        -e KAFKA_CFG_NODE_ID=0 \
                                        -e KAFKA_CFG_PROCESS_ROLES=controller,broker \
@@ -28,4 +28,7 @@ docker-up: docker-build
 docker-logs:
 	docker logs -f tmanager
 
+
+kafka:
+	docker run -p 2181:2181 -p 9092:9092 --name kafka-docker-container --env ADVERTISED_HOST=127.0.0.1 --env ADVERTISED_PORT=9092 spotify/kafka
 

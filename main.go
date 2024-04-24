@@ -70,15 +70,9 @@ func main() {
 
 	defer connKafka.Close()
 
-	//err = connKafka.CreateTopics(kafka.TopicConfig{
-	//	Topic:             cfg.KafkaTopicCreateUser,
-	//	NumPartitions:     1,
-	//	ReplicationFactor: 1,
-	//})
-	//if err != nil {
-	//	log.Fatal("create topic:", err)
-	//}
-
+	rp := repository.NewProjectRepository(db, rds)
+	sp := service.NewProjectService(rp)
+	hp := api.NewProjectHandler(sp)
 	rt := repository.NewTaskRepository(db, rds)
 	st := service.NewTaskService(rt)
 	ht := api.NewTaskHandler(st)
@@ -93,6 +87,12 @@ func main() {
 	//для части обработчиков создаем группу с доп. middleware для авторизации, тк она нужна не для всех обработчиков
 	router.Group(func(r chi.Router) {
 		r.Use(mw.AuthHandler)
+		r.Post("/projects", hp.CreateProject)
+		r.Get("/projects", hp.GetAllProjects)
+		r.Get("/projects/{id}", hp.GetProject)
+		r.Put("/projects/{id}", hp.UpdateProject)
+		r.Delete("/projects/{id}", hp.DeleteProject)
+
 		r.Post("/tasks", ht.CreateTask)
 		r.Get("/tasks/{id}", ht.GetTaskByID)
 		r.Get("/tasks", ht.GetAllTasks)
