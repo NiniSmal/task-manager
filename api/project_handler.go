@@ -24,6 +24,7 @@ type ProjectService interface {
 	GetProject(ctx context.Context, id int64) (entity.Project, error)
 	GetAllProjects(ctx context.Context) ([]entity.Project, error)
 	UpdateProject(ctx context.Context, id int64, project entity.Project) error
+	DeleteProject(ctx context.Context, id int64) error
 }
 
 func (p *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
@@ -97,6 +98,21 @@ func (p *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = p.service.UpdateProject(ctx, int64(id), project)
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
+}
+func (p *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	idR := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idR)
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
+
+	err = p.service.DeleteProject(ctx, int64(id))
 	if err != nil {
 		HandlerError(w, err)
 		return

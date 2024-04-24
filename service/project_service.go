@@ -23,6 +23,7 @@ type ProjectRepository interface {
 	GetUserProjects(ctx context.Context, userID int64) ([]entity.Project, error)
 	GetProjects(ctx context.Context) ([]entity.Project, error)
 	UpdateProject(ctx context.Context, id int64, project entity.Project) error
+	DeleteProject(ctx context.Context, id int64) error
 }
 
 func (p *ProjectService) AddProject(ctx context.Context, project entity.Project) error {
@@ -97,6 +98,21 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int64, project en
 		err = p.repo.UpdateProject(ctx, id, project)
 		if err != nil {
 			return fmt.Errorf("update project: %w", err)
+		}
+	}
+	return nil
+}
+
+func (p *ProjectService) DeleteProject(ctx context.Context, id int64) error {
+	user := ctx.Value("user").(entity.User)
+	projectOld, err := p.repo.GetProject(ctx, id)
+	if err != nil {
+		return fmt.Errorf("get project by id: %w", err)
+	}
+	if user.ID == projectOld.UserID {
+		err = p.repo.DeleteProject(ctx, id)
+		if err != nil {
+			return fmt.Errorf("delete progect by id %d: %w", id, err)
 		}
 	}
 	return nil

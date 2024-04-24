@@ -91,3 +91,14 @@ func (p *ProjectRepository) UpdateProject(ctx context.Context, id int64, project
 	}
 	return nil
 }
+
+func (p *ProjectRepository) DeleteProject(ctx context.Context, id int64) error {
+	query := "DELETE FROM projects WHERE id = $1 "
+
+	_, err := p.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
