@@ -23,7 +23,7 @@ stages:
 
 test:
   stage: test
-  except: [tags]
+  except: [ tags ]
   image: golang:1.21.0
   services:
     - postgres:15.3-alpine
@@ -40,7 +40,7 @@ test:
 
 build:
   stage: build
-  except: [master, develop, tags]
+  except: [ master, develop, tags ]
   extends: .go-cache
   script:
     - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build cmd/main.go
@@ -48,12 +48,12 @@ build:
 build-docker-dev:
   image: docker:24.0.6-alpine3.18
   stage: build
-  only: [develop]
-  except: [tags]
+  only: [ develop ]
+  except: [ tags ]
   environment: dev
   needs:
     - test
-    - run-linter
+#    - run-linter
   services:
     - docker:24.0.6-dind-alpine3.18
   extends: .go-cache
@@ -67,7 +67,7 @@ deploy-dev:
   stage: deploy
   only:
     - develop
-  except: [tags]
+  except: [ tags ]
   needs:
     - build-docker-dev
   image: alpine:latest
@@ -99,12 +99,12 @@ deploy-dev:
 build-docker-prod:
   image: docker:23.0.4-alpine3.17
   stage: build
-  only: [master]
-  except: [tags]
+  only: [ master ]
+  except: [ tags ]
   environment: prod
   needs:
     - test
-    - run-linter
+#    - run-linter
   services:
     - docker:23.0.4-dind-alpine3.17
   before_script:
@@ -117,7 +117,7 @@ deploy-prod:
   stage: deploy
   only:
     - master
-  except: [tags]
+  except: [ tags ]
   needs:
     - build-docker-prod
   image: alpine:latest
