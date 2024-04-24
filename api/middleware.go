@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"log"
@@ -43,6 +44,10 @@ func (m *Middleware) AuthHandler(next http.Handler) http.Handler {
 
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
+			if errors.Is(err, http.ErrNoCookie) {
+				HandlerError(w, entity.ErrNotAuthenticated)
+				return
+			}
 			HandlerError(w, err)
 			return
 		}
