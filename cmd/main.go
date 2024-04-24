@@ -84,24 +84,25 @@ func main() {
 	router := chi.NewRouter()
 
 	router.Use(api.Logging, api.ResponseHeader)
+
 	//для части обработчиков создаем группу с доп. middleware для авторизации, тк она нужна не для всех обработчиков
 	router.Group(func(r chi.Router) {
 		r.Use(mw.AuthHandler)
-		r.Post("/projects", hp.CreateProject)
-		r.Get("/projects", hp.GetAllProjects)
-		r.Get("/projects/{id}", hp.GetProject)
-		r.Put("/projects/{id}", hp.UpdateProject)
-		r.Delete("/projects/{id}", hp.DeleteProject)
+		r.Post("/api/projects", hp.CreateProject)
+		r.Get("/api/projects", hp.GetAllProjects)
+		r.Get("/api/projects/{id}", hp.GetProject)
+		r.Put("/api/projects/{id}", hp.UpdateProject)
+		r.Delete("/api/projects/{id}", hp.DeleteProject)
 
-		r.Post("/tasks", ht.CreateTask)
-		r.Get("/tasks/{id}", ht.GetTaskByID)
-		r.Get("/tasks", ht.GetAllTasks)
-		r.Put("/tasks/{id}", ht.UpdateTask)
+		r.Post("/api/tasks", ht.CreateTask)
+		r.Get("/api/tasks/{id}", ht.GetTaskByID)
+		r.Get("/api/tasks", ht.GetAllTasks)
+		r.Put("//apitasks/{id}", ht.UpdateTask)
 	})
 
-	router.Post("/users", hu.CreateUser)
-	router.Post("/login", hu.Login)
-	router.Get("/verification", hu.Verification)
+	router.Post("/api/users", hu.CreateUser)
+	router.Post("/api/login", hu.Login)
+	router.Get("/api/verification", hu.Verification)
 
 	log.Println("start http server at port:", cfg.Port)
 	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), router)
