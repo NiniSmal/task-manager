@@ -85,6 +85,8 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int64, project en
 		return fmt.Errorf("get project by id: %w", err)
 	}
 
+	project.UpdatedAt = time.Now()
+
 	if user.Role == entity.RoleAdmin {
 		err = p.repo.UpdateProject(ctx, id, project)
 		if err != nil {
