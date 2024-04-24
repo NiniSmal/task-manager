@@ -1,40 +1,147 @@
-image: golang:1.21
+image: golang:1.21.0-alpine
 
 stages:
   - test
   - build
   - deploy
 
-run-test:
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  before_script:
+    - mkdir -p .go
+  cache:
+    paths:
+      - .go/pkg/mod/
+
+#run-linter:
+#  stage: test
+#  except: [tags]
+#  image: golangci/golangci-lint:v1.54.2-alpine
+#  script:
+#    - golangci-lint run
+
+test:
   stage: test
-  script: go test -v  ./...
+  except: [tags]
+  image: golang:1.21.0
+  services:
+    - postgres:15.3-alpine
+  variables:
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+  extends: .go-cache
+  script:
+    - go test -v -race -coverprofile=coverage.out ./...
+  artifacts:
+    paths:
+      - coverage.out
+  coverage: '/coverage: \d+.\d+% of statements/'
 
-build-app:
+build:
   stage: build
-  script: go build -o tmanager .
+  except: [master, develop, tags]
+  extends: .go-cache
+  script:
+    - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build cmd/main.go
 
-deploy-to-server:
+build-docker-dev:
+  image: docker:24.0.6-alpine3.18
+  stage: build
+  only: [develop]
+  except: [tags]
+  environment: dev
+  needs:
+    - test
+    - run-linter
+  services:
+    - docker:24.0.6-dind-alpine3.18
+  extends: .go-cache
+  before_script:
+    - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+  script:
+    - docker build -t $APP_IMAGE:$CI_ENVIRONMENT_NAME-$CI_COMMIT_SHORT_SHA .
+    - docker push $APP_IMAGE:$CI_ENVIRONMENT_NAME-$CI_COMMIT_SHORT_SHA
+
+deploy-dev:
   stage: deploy
-  only: [main]
-  when: manual
-  script: echo "hello from deploy"
+  only:
+    - develop
+  except: [tags]
+  needs:
+    - build-docker-dev
+  image: alpine:latest
+  environment: dev
+  extends: .go-cache
+  before_script:
+    #    - set -xeuo pipefail
+    ### send message to telegram
+    - apk add --update curl bash
+    - curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" -d "chat_id=$CHAT_ID" -d "text=🔄[$CI_PROJECT_NAME][$CI_ENVIRONMENT_NAME][$GITLAB_USER_LOGIN] deploy $CI_COMMIT_BRANCH"
+    ### install ssh client and copy private ssh key
+    - apk add --update openssh-client bash
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - cp $ENV_FILE .env
+    - echo "IMAGE_TAG=$CI_ENVIRONMENT_NAME-$CI_COMMIT_SHORT_SHA" >> .env
+    - scp -P $SSH_PORT -o StrictHostKeyChecking=no .env $SSH_USER@$SSH_HOST:projects/dev-tm/.env
+    - ssh -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "cd projects/dev-tm && docker-compose up -d --remove-orphans"
+  after_script:
+    - if [ "$CI_JOB_STATUS" == "success" ]; then
+      curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" -d "chat_id=$CHAT_ID" -d "text=✅[$CI_PROJECT_NAME][$CI_ENVIRONMENT_NAME][$GITLAB_USER_LOGIN] deploy $CI_COMMIT_BRANCH $CI_JOB_STATUS";
+      else
+      curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" -d "chat_id=$CHAT_ID" -d "text=❌[$CI_PROJECT_NAME][$CI_ENVIRONMENT_NAME][$GITLAB_USER_LOGIN] deploy $CI_COMMIT_BRANCH $CI_JOB_STATUS $CI_PIPELINE_URL";
+      fi
 
+build-docker-prod:
+  image: docker:23.0.4-alpine3.17
+  stage: build
+  only: [master]
+  except: [tags]
+  environment: prod
+  needs:
+    - test
+    - run-linter
+  services:
+    - docker:23.0.4-dind-alpine3.17
+  before_script:
+    - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+  script:
+    - docker build -t $APP_IMAGE:$CI_ENVIRONMENT_NAME-$CI_COMMIT_SHORT_SHA .
+    - docker push $APP_IMAGE:$CI_ENVIRONMENT_NAME-$CI_COMMIT_SHORT_SHA
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+deploy-prod:
+  stage: deploy
+  only:
+    - master
+  except: [tags]
+  needs:
+    - build-docker-prod
+  image: alpine:latest
+  environment: prod
+  extends: .go-cache
+  before_script:
+    #    - set -xeuo pipefail
+    ### send message to telegram
+    - apk add --update curl bash
+    - curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" -d "chat_id=$CHAT_ID" -d "text=🔄[$CI_PROJECT_NAME][$CI_ENVIRONMENT_NAME][$GITLAB_USER_LOGIN] deploy $CI_COMMIT_BRANCH"
+    ### install ssh client and copy private ssh key
+    - apk add --update openssh-client bash
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - cp $ENV_FILE .env
+    - echo "IMAGE_TAG=$CI_ENVIRONMENT_NAME-$CI_COMMIT_SHORT_SHA" >> .env
+    - scp -P $SSH_PORT -o StrictHostKeyChecking=no .env $SSH_USER@$SSH_HOST:projects/prod-tm/.env
+    - ssh -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "cd projects/prod-tm && docker-compose up -d --remove-orphans"
+  after_script:
+    - if [ "$CI_JOB_STATUS" == "success" ]; then
+      curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" -d "chat_id=$CHAT_ID" -d "text=✅[$CI_PROJECT_NAME][$CI_ENVIRONMENT_NAME][$GITLAB_USER_LOGIN] deploy $CI_COMMIT_BRANCH $CI_JOB_STATUS";
+      else
+      curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" -d "chat_id=$CHAT_ID" -d "text=❌[$CI_PROJECT_NAME][$CI_ENVIRONMENT_NAME][$GITLAB_USER_LOGIN] deploy $CI_COMMIT_BRANCH $CI_JOB_STATUS $CI_PIPELINE_URL";
+      fi
