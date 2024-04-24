@@ -81,13 +81,9 @@ func (p *ProjectService) GetAllProjects(ctx context.Context) ([]entity.Project, 
 func (p *ProjectService) UpdateProject(ctx context.Context, id int64, project entity.Project) error {
 	user := ctx.Value("user").(entity.User)
 
-	if project.Status != entity.StatusDone && project.Status != entity.StatusNotDone {
-		return errors.New("status  is not correct")
-	}
-
-	_, err := p.repo.GetProject(ctx, id)
+	projectOld, err := p.repo.GetProject(ctx, id)
 	if err != nil {
-		return fmt.Errorf("get task by id: %w", err)
+		return fmt.Errorf("get prjo by id: %w", err)
 	}
 
 	if user.Role == entity.RoleAdmin {
@@ -96,7 +92,7 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int64, project en
 			return fmt.Errorf("update task: %w", err)
 		}
 	}
-	if user.ID == project.UserID {
+	if user.ID == projectOld.UserID {
 		err = p.repo.UpdateProject(ctx, id, project)
 		if err != nil {
 			return fmt.Errorf("update task: %w", err)

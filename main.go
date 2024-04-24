@@ -91,6 +91,7 @@ func main() {
 		r.Get("/projects", hp.GetAllProjects)
 		r.Get("/projects/{id}", hp.GetProject)
 		r.Put("/projects/{id}", hp.UpdateProject)
+
 		r.Post("/tasks", ht.CreateTask)
 		r.Get("/tasks/{id}", ht.GetTaskByID)
 		r.Get("/tasks", ht.GetAllTasks)

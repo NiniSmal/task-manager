@@ -8,7 +8,7 @@ redis-up:
 	docker rm -f tmanager-redis && docker run -d -p 6379:6379 --network app --name tmanager-redis redis
 
 kafka-docker:
-	docker rm -f tmanager-kafka && docker run -d -p 9097:9092 --name tmanager-kafka --hostname tmanager-kafka \
+	docker rm -f tmanager-kafka && docker run -d -p 9092:9092 --name tmanager-kafka --hostname localhost \
                                        --network app \
                                        -e KAFKA_CFG_NODE_ID=0 \
                                        -e KAFKA_CFG_PROCESS_ROLES=controller,broker \
