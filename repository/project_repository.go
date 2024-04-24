@@ -19,9 +19,9 @@ func NewProjectRepository(db *sql.DB, rds *redis.Client) *ProjectRepository {
 	}
 }
 func (p *ProjectRepository) SaveProject(ctx context.Context, project entity.Project) error {
-	query := "INSERT INTO projects (name, status, created_at, updated_at, user_id) VALUES ($1, $2, $3, $4,$5)"
+	query := "INSERT INTO projects (name, created_at, updated_at, user_id) VALUES ($1, $2, $3, $4)"
 
-	_, err := p.db.ExecContext(ctx, query, project.Name, project.Status, project.CreatedAt, project.UpdatedAt, project.UserID)
+	_, err := p.db.ExecContext(ctx, query, project.Name, project.CreatedAt, project.UpdatedAt, project.UserID)
 	if err != nil {
 		return err
 	}
@@ -29,11 +29,11 @@ func (p *ProjectRepository) SaveProject(ctx context.Context, project entity.Proj
 }
 
 func (p *ProjectRepository) GetProject(ctx context.Context, id int64) (entity.Project, error) {
-	query := "SELECT id, name, status, created_at, updated_at, user_id FROM projects WHERE id  = $1"
+	query := "SELECT id, name, created_at, updated_at, user_id FROM projects WHERE id  = $1"
 
 	var project entity.Project
 
-	err := p.db.QueryRowContext(ctx, query, id).Scan(&project.ID, &project.Name, &project.Status, &project.CreatedAt, &project.UpdatedAt, &project.UserID)
+	err := p.db.QueryRowContext(ctx, query, id).Scan(&project.ID, &project.Name, &project.CreatedAt, &project.UpdatedAt, &project.UserID)
 	if err != nil {
 		return entity.Project{}, err
 	}
@@ -41,7 +41,7 @@ func (p *ProjectRepository) GetProject(ctx context.Context, id int64) (entity.Pr
 }
 
 func (p *ProjectRepository) GetUserProjects(ctx context.Context, userID int64) ([]entity.Project, error) {
-	query := "SELECT id, name, status, created_at, updated_at, user_id FROM projects WHERE user_id = $1"
+	query := "SELECT id, name,  created_at, updated_at, user_id FROM projects WHERE user_id = $1"
 
 	rows, err := p.db.QueryContext(ctx, query, userID)
 	if err != nil {
@@ -52,7 +52,7 @@ func (p *ProjectRepository) GetUserProjects(ctx context.Context, userID int64) (
 	var projects []entity.Project
 	for rows.Next() {
 		var project entity.Project
-		err = rows.Scan(&project.ID, &project.Name, &project.Status, &project.CreatedAt, &project.UpdatedAt, &project.UserID)
+		err = rows.Scan(&project.ID, &project.Name, &project.CreatedAt, &project.UpdatedAt, &project.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +63,7 @@ func (p *ProjectRepository) GetUserProjects(ctx context.Context, userID int64) (
 }
 
 func (p *ProjectRepository) GetProjects(ctx context.Context) ([]entity.Project, error) {
-	query := "SELECT id, name, status, created_at, updated_at, user_id FROM projects"
+	query := "SELECT id, name, created_at, updated_at, user_id FROM projects"
 	rows, err := p.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (p *ProjectRepository) GetProjects(ctx context.Context) ([]entity.Project, 
 	var projects []entity.Project
 	for rows.Next() {
 		var project entity.Project
-		err = rows.Scan(&project.ID, &project.Name, &project.Status, &project.CreatedAt, &project.UpdatedAt, &project.UserID)
+		err = rows.Scan(&project.ID, &project.Name, &project.CreatedAt, &project.UpdatedAt, &project.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -83,9 +83,9 @@ func (p *ProjectRepository) GetProjects(ctx context.Context) ([]entity.Project, 
 }
 
 func (p *ProjectRepository) UpdateProject(ctx context.Context, id int64, project entity.Project) error {
-	query := "UPDATE projects SET name = $1, status = $2 WHERE id = $3"
+	query := "UPDATE projects SET name = $1 WHERE id = $2"
 
-	_, err := p.db.ExecContext(ctx, query, project.Name, project.Status, id)
+	_, err := p.db.ExecContext(ctx, query, project.Name, id)
 	if err != nil {
 		return err
 	}

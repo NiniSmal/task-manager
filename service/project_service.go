@@ -29,7 +29,6 @@ func (p *ProjectService) AddProject(ctx context.Context, project entity.Project)
 	if project.Name == "" {
 		return errors.New("empty name")
 	}
-	project.Status = entity.StatusNotDone
 	project.CreatedAt = time.Now()
 	project.UpdatedAt = project.CreatedAt
 
@@ -83,19 +82,19 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int64, project en
 
 	projectOld, err := p.repo.GetProject(ctx, id)
 	if err != nil {
-		return fmt.Errorf("get prjo by id: %w", err)
+		return fmt.Errorf("get project by id: %w", err)
 	}
 
 	if user.Role == entity.RoleAdmin {
 		err = p.repo.UpdateProject(ctx, id, project)
 		if err != nil {
-			return fmt.Errorf("update task: %w", err)
+			return fmt.Errorf("update project: %w", err)
 		}
 	}
 	if user.ID == projectOld.UserID {
 		err = p.repo.UpdateProject(ctx, id, project)
 		if err != nil {
-			return fmt.Errorf("update task: %w", err)
+			return fmt.Errorf("update project: %w", err)
 		}
 	}
 	return nil
