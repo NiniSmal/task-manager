@@ -97,7 +97,7 @@ func main() {
 		r.Post("/api/tasks", ht.CreateTask)
 		r.Get("/api/tasks/{id}", ht.GetTaskByID)
 		r.Get("/api/tasks", ht.GetAllTasks)
-		r.Put("//apitasks/{id}", ht.UpdateTask)
+		r.Put("/api/tasks/{id}", ht.UpdateTask)
 	})
 
 	router.Post("/api/users", hu.CreateUser)
