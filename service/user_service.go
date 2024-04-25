@@ -13,14 +13,16 @@ import (
 )
 
 type UserService struct {
-	repo  UserRepository
-	kafka *kafka.Writer
+	repo   UserRepository
+	kafka  *kafka.Writer
+	appURL string
 }
 
-func NewUserService(r UserRepository, w *kafka.Writer) *UserService {
+func NewUserService(r UserRepository, w *kafka.Writer, appURL string) *UserService {
 	return &UserService{
-		repo:  r,
-		kafka: w,
+		repo:   r,
+		kafka:  w,
+		appURL: appURL,
 	}
 }
 
@@ -66,7 +68,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 	}
 
 	email := SendEmail{
-		Text: "http://localhost:8021/verification?code=" + user.VerificationCode,
+		Text: u.appURL + "/verification?code=" + user.VerificationCode,
 		To:   user.Login,
 	}
 

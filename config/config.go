@@ -13,6 +13,7 @@ type Config struct {
 	KafkaAddr            string `env:"KAFKA_ADDR"`
 	KafkaTopicCreateUser string `env:"KAFKA_TOPIC_CREATE_USER"`
 	MailServiceAddr      string `env:"MAIL_SERVICE_ADDR"`
+	AppURL               string `env:"APP_URL"`
 }
 
 func GetConfig() (*Config, error) {

@@ -85,7 +85,7 @@ func main() {
 	st := service.NewTaskService(rt)
 	ht := api.NewTaskHandler(st)
 	ut := repository.NewUserRepository(db, rds)
-	su := service.NewUserService(ut, kafkaWriter)
+	su := service.NewUserService(ut, kafkaWriter, cfg.AppURL)
 	hu := api.NewUserHandler(su)
 	// midll такой же обработчик, поэтому так же принимает репозиторий
 	mw := api.NewMiddleware(ut)
