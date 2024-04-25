@@ -5,18 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 	"gitlab.com/nina8884807/task-manager/entity"
-	"time"
 )
 
 type UserService struct {
 	repo  UserRepository
-	kafka *kafka.Conn
+	kafka *kafka.Writer
 }
 
-func NewUserService(r UserRepository, w *kafka.Conn) *UserService {
+func NewUserService(r UserRepository, w *kafka.Writer) *UserService {
 	return &UserService{
 		repo:  r,
 		kafka: w,
@@ -73,11 +74,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		return fmt.Errorf("failed to marshal message: ,%w", err)
 	}
 
-	_, err = u.kafka.WriteMessages(
-		kafka.Message{
-			Value: msg,
-		},
-	)
+	err = u.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
 	if err != nil {
 		return fmt.Errorf("failed to write messages: , %w", err)
 	}
