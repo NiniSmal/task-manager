@@ -40,7 +40,7 @@ type SendEmail struct {
 
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
 	user := entity.User{
-		Login:            login,
+		Email:            login,
 		Password:         password,
 		CreatedAt:        time.Now(),
 		Role:             entity.RoleUser,
@@ -69,7 +69,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 
 	email := SendEmail{
 		Text: u.appURL + "/verification?code=" + user.VerificationCode,
-		To:   user.Login,
+		To:   user.Email,
 	}
 
 	msg, err := json.Marshal(&email)

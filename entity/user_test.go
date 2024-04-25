@@ -14,27 +14,27 @@ func TestUser_Validation(t *testing.T) {
 	}{
 		{
 			name:      "ok",
-			user:      User{Login: "ninamusatova90+1@gmail.com", Password: "Querty123!"},
+			user:      User{Email: "ninamusatova90+1@gmail.com", Password: "Querty123!"},
 			wantError: false,
 		},
 		{
 			name:      "empty password",
-			user:      User{Login: "ninamusatova90+1@gmail.com", Password: ""},
+			user:      User{Email: "ninamusatova90+1@gmail.com", Password: ""},
 			wantError: true,
 		},
 		{
 			name:      "empty login",
-			user:      User{Login: "", Password: "Querty123!"},
+			user:      User{Email: "", Password: "Querty123!"},
 			wantError: true,
 		},
 		{
 			name:      "empty login and empty password",
-			user:      User{Login: "", Password: ""},
+			user:      User{Email: "", Password: ""},
 			wantError: true,
 		},
 		{
 			name:      "long login",
-			user:      User{Login: strings.Repeat("n", maxLogin+1), Password: "Querty123!"},
+			user:      User{Email: strings.Repeat("n", maxLogin+1), Password: "Querty123!"},
 			wantError: true,
 		},
 	}

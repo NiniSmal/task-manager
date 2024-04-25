@@ -21,7 +21,7 @@ const (
 
 type User struct {
 	ID               int64     `json:"id"`
-	Login            string    `json:"login"`
+	Email            string    `json:"email"`
 	Password         string    `json:"password"`
 	CreatedAt        time.Time `json:"created_at"`
 	Role             Role      `json:"role"`
@@ -30,7 +30,7 @@ type User struct {
 }
 
 func (user *User) Validate() error {
-	rl := utf8.RuneCountInString(user.Login)
+	rl := utf8.RuneCountInString(user.Email)
 	if rl < minLogin {
 		return fmt.Errorf("the login must be minimum %d symbols", minLogin)
 	}

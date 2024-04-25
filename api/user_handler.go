@@ -36,7 +36,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = u.service.CreateUser(r.Context(), user.Login, user.Password)
+	err = u.service.CreateUser(r.Context(), user.Email, user.Password)
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -53,7 +53,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := u.service.Login(r.Context(), user.Login, user.Password)
+	sessionID, err := u.service.Login(r.Context(), user.Email, user.Password)
 
 	if err != nil {
 		HandlerError(w, err)

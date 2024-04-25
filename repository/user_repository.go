@@ -27,7 +27,7 @@ func NewUserRepository(db *sql.DB, rds *redis.Client) *UserRepository {
 func (r *UserRepository) CreateUser(ctx context.Context, user entity.User) error {
 	query := "INSERT INTO users ( login, password, created_at, role, verification, verification_code ) VALUES ($1, $2, $3, $4, $5, $6)"
 
-	_, err := r.db.ExecContext(ctx, query, user.Login, user.Password, user.CreatedAt, user.Role, user.Verification, user.VerificationCode)
+	_, err := r.db.ExecContext(ctx, query, user.Email, user.Password, user.CreatedAt, user.Role, user.Verification, user.VerificationCode)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (r *UserRepository) UserByLogin(ctx context.Context, login string) (entity.
 
 	var user entity.User
 
-	err := r.db.QueryRowContext(ctx, query, login).Scan(&user.ID, &user.Login, &user.Password, &user.CreatedAt, &user.Role, &user.Verification, &user.VerificationCode)
+	err := r.db.QueryRowContext(ctx, query, login).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.Role, &user.Verification, &user.VerificationCode)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return entity.User{}, entity.ErrNotFound
@@ -95,7 +95,7 @@ func (r *UserRepository) GetSession(ctx context.Context, sessionID uuid.UUID) (e
 
 	query := "SELECT user_id, login, created_at, verification, role FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.id = $1"
 
-	err = r.db.QueryRowContext(ctx, query, sessionID).Scan(&user.ID, &user.Login, &user.CreatedAt, &user.Verification, &user.Role)
+	err = r.db.QueryRowContext(ctx, query, sessionID).Scan(&user.ID, &user.Email, &user.CreatedAt, &user.Verification, &user.Role)
 	if err != nil {
 		return entity.User{}, err
 	}
