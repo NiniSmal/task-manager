@@ -98,13 +98,13 @@ func main() {
 		r.Post("/api/projects", hp.CreateProject)
 		r.Get("/api/projects", hp.GetAllProjects)
 		r.Get("/api/projects/{id}", hp.GetProject)
-		r.Get("/api/projects/{id}/tasks", ht.ProjectTasks)
 		r.Put("/api/projects/{id}", hp.UpdateProject)
 		r.Delete("/api/projects/{id}", hp.DeleteProject)
+		r.Get("/api/projects/{id}/tasks", ht.ProjectTasks)
 
+		r.Get("/api/tasks", ht.GetAllTasks)
 		r.Post("/api/tasks", ht.CreateTask)
 		r.Get("/api/tasks/{id}", ht.GetTaskByID)
-		r.Get("/api/tasks", ht.GetAllTasks)
 		r.Put("/api/tasks/{id}", ht.UpdateTask)
 	})
 
