@@ -25,6 +25,7 @@ type TaskService interface {
 	AddTask(ctx context.Context, task entity.Task) error
 	GetTask(ctx context.Context, id int64) (entity.Task, error)
 	GetAllTasks(ctx context.Context) ([]entity.Task, error)
+	GetTasksByProject(ctx context.Context, projectID int64) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
 }
 
@@ -36,6 +37,10 @@ func HandlerError(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 	case errors.Is(err, entity.ErrNotAuthenticated):
 		http.Error(w, err.Error(), http.StatusUnauthorized)
+	case errors.Is(err, entity.ErrNotFound):
+		http.Error(w, err.Error(), http.StatusNotFound)
+	case errors.Is(err, entity.ErrLoginExists):
+		http.Error(w, err.Error(), http.StatusConflict)
 	default:
 		http.Error(w, "The problem is in program", http.StatusInternalServerError)
 	}
@@ -47,6 +52,7 @@ func (h *TaskHandler) HandlerAnswerEncode(w http.ResponseWriter, body any) error
 		return err
 	}
 	return nil
+
 }
 
 func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
@@ -96,6 +102,26 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
+	err = h.HandlerAnswerEncode(w, tasks)
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
+}
+func (h *TaskHandler) ProjectTasks(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	projectID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
+	tasks, err := h.service.GetTasksByProject(r.Context(), projectID)
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 
 	err = h.HandlerAnswerEncode(w, tasks)

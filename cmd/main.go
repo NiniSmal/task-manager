@@ -91,6 +91,7 @@ func main() {
 		r.Post("/api/projects", hp.CreateProject)
 		r.Get("/api/projects", hp.GetAllProjects)
 		r.Get("/api/projects/{id}", hp.GetProject)
+		r.Get("/api/projects/{id}/tasks", ht.ProjectTasks)
 		r.Put("/api/projects/{id}", hp.UpdateProject)
 		r.Delete("/api/projects/{id}", hp.DeleteProject)
 

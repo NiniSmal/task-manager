@@ -52,8 +52,9 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 
 	_, err = u.repo.UserByLogin(ctx, login)
 	if err == nil {
-		return fmt.Errorf("this login already exists")
+		return entity.ErrLoginExists
 	}
+
 	if !errors.Is(err, entity.ErrNotFound) {
 		return fmt.Errorf("get user by login: %w", err)
 	}

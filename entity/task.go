@@ -13,6 +13,7 @@ type Task struct {
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
 	UserID    int64     `json:"user_id"`
+	ProjectID int64     `json:"project_id"`
 }
 
 type UpdateTask struct {
