@@ -6,7 +6,8 @@ info:
   description: Task manager can work with tasks
 
 servers:
-  - url: http://localhost:8021
+  - url: http://localhost:8021/api
+  - url: https://tm.anaxita.ru/api
 
 paths:
   /tasks:
@@ -42,3 +43,119 @@ paths:
                       format: int64
                       example: 105
 
+    post:
+      summary: Create a new task
+      tags:
+        - Task
+      parameters:
+        - name: taskID
+          in: path
+          schema:
+            type: integer
+      requestBody:
+        description: Data for the new task
+        required: true
+        content:
+          application/json:
+            example:
+              name: new_user
+
+      responses:
+        '200':
+          description: Successful creation
+          content:
+            application/json:
+              example:
+                taskID: 12
+                name: "buy milk"
+
+  /tasks/{id}:
+    get:
+      summary: "get task by id"
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                      example: 12
+                    name:
+                      type: string
+                      example: buy milk
+                    status:
+                      type: string
+                      enum:
+                        - not_done
+                        - done
+                    created_at:
+                      type: string
+                      format: date-time
+                    user_id:
+                      type: integer
+                      format: int64
+                      example: 105
+
+    put:
+      summary: Update status task
+
+      parameters:
+        - name: taskID
+          in: query
+          schema:
+            type: integer
+      requestBody:
+        description: New user data
+        required: true
+        content:
+          application/json:
+            example:
+              name: updated_task
+              status: done
+      responses:
+        '200':
+          description: Successful update
+          content:
+            application/json:
+              example:
+                ID: 123
+                name: updated_user
+                status: done
+
+
+  /users:
+    post:
+      description: Registration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  example: nina@mail.ru
+                  format: email
+                password:
+                  type: string
+                  example: 123
+                  format: password
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ''
