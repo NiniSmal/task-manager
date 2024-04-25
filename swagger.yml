@@ -159,3 +159,51 @@ paths:
               schema:
                 type: string
                 example: ''
+
+  /login:
+    post:
+      description: Login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  example: nina@mail.ru
+                  format: email
+                password:
+                  type: string
+                  example: 123
+                  format: password
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ''
+
+  /verification:
+    get:
+      description: Verification
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+            format: uuid
+          example: '6051edb0-e769-4421-8d03-198255eb89bc'
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: 'verification successful, now you can login'
+
+
