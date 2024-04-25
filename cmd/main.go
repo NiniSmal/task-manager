@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
@@ -13,8 +16,6 @@ import (
 	"gitlab.com/nina8884807/task-manager/config"
 	"gitlab.com/nina8884807/task-manager/repository"
 	"gitlab.com/nina8884807/task-manager/service"
-	"log"
-	"net/http"
 )
 
 func main() {
@@ -55,20 +56,27 @@ func main() {
 
 	defer rds.Close()
 
-	//make migrations
+	// make migrations
 	log.Printf("Start migrating database \n")
-	//применяем все возможные миграции
+	// применяем все возможные миграции
 	err = goose.Up(db, "migrations")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	connKafka, err := kafka.DialLeader(ctx, "tcp", cfg.KafkaAddr, cfg.KafkaTopicCreateUser, 0)
+	connKafka, err := kafka.Dial("tcp", cfg.KafkaAddr)
 	if err != nil {
 		log.Fatal("dial kafka:", err)
 	}
+	connKafka.Close()
 
-	defer connKafka.Close()
+	kafkaWriter := &kafka.Writer{
+		Addr:                   kafka.TCP(cfg.KafkaAddr),
+		Topic:                  cfg.KafkaTopicCreateUser,
+		Balancer:               &kafka.LeastBytes{},
+		AllowAutoTopicCreation: true,
+	}
+	defer kafkaWriter.Close()
 
 	rp := repository.NewProjectRepository(db, rds)
 	sp := service.NewProjectService(rp)
@@ -77,15 +85,14 @@ func main() {
 	st := service.NewTaskService(rt)
 	ht := api.NewTaskHandler(st)
 	ut := repository.NewUserRepository(db, rds)
-	su := service.NewUserService(ut, connKafka)
+	su := service.NewUserService(ut, kafkaWriter)
 	hu := api.NewUserHandler(su)
-	//midll такой же обработчик, поэтому так же принимает репозиторий
+	// midll такой же обработчик, поэтому так же принимает репозиторий
 	mw := api.NewMiddleware(ut)
 	router := chi.NewRouter()
 
 	router.Use(api.Logging, api.ResponseHeader)
-
-	//для части обработчиков создаем группу с доп. middleware для авторизации, тк она нужна не для всех обработчиков
+	// для части обработчиков создаем группу с доп. middleware для авторизации, тк она нужна не для всех обработчиков
 	router.Group(func(r chi.Router) {
 		r.Use(mw.AuthHandler)
 		r.Post("/api/projects", hp.CreateProject)
