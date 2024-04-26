@@ -25,7 +25,6 @@ type TaskService interface {
 	AddTask(ctx context.Context, task entity.Task) error
 	GetTask(ctx context.Context, id int64) (entity.Task, error)
 	GetAllTasks(ctx context.Context) ([]entity.Task, error)
-	GetTasksByProject(ctx context.Context, projectID int64) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
 }
 
@@ -102,26 +101,6 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	err = h.HandlerAnswerEncode(w, tasks)
-	if err != nil {
-		HandlerError(w, err)
-		return
-	}
-}
-func (h *TaskHandler) ProjectTasks(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	projectID, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		HandlerError(w, err)
-		return
-	}
-	tasks, err := h.service.GetTasksByProject(r.Context(), projectID)
-	if err != nil {
-		HandlerError(w, err)
-		return
-	}
 	w.Header().Set("Content-Type", "application/json")
 
 	err = h.HandlerAnswerEncode(w, tasks)

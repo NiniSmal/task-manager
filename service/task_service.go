@@ -23,7 +23,6 @@ type Repository interface {
 	GetTaskByID(ctx context.Context, id int64) (entity.Task, error)
 	GetUserTasks(ctx context.Context, userID int64) ([]entity.Task, error)
 	GetTasks(ctx context.Context) ([]entity.Task, error)
-	GetTasksByProject(ctx context.Context, projectID int64) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
 }
 
@@ -78,24 +77,6 @@ func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
 		return nil, fmt.Errorf("get all tasks: %w", err)
 	}
 	return tasks, nil
-
-}
-
-func (s *TaskService) GetTasksByProject(ctx context.Context, projectID int64) ([]entity.Task, error) {
-	user := ctx.Value("user").(entity.User)
-
-	tasks, err := s.repo.GetTasksByProject(ctx, projectID)
-	if err != nil {
-		return nil, fmt.Errorf("get tasks by project %d: %w", projectID, err)
-	}
-	if user.Role == entity.RoleAdmin {
-		return tasks, nil
-	}
-	if tasks[0].UserID == user.ID {
-		return tasks, nil
-	} else {
-		return nil, err
-	}
 
 }
 
