@@ -42,10 +42,15 @@ func (r *TaskRepository) GetTaskByID(ctx context.Context, id int64) (entity.Task
 	return task, nil
 }
 
-func (r *TaskRepository) GetTasks(ctx context.Context) ([]entity.Task, error) {
-	query := "SELECT id, name, status, created_at, project_id FROM tasks"
+func (r *TaskRepository) GetTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
+	var args []any
+	query := "SELECT id, name, status, created_at, project_id, user_id FROM tasks "
+	if f.UserID != "" {
+		query += "WHERE user_id = $1"
+		args = append(args, f)
+	}
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +61,7 @@ func (r *TaskRepository) GetTasks(ctx context.Context) ([]entity.Task, error) {
 
 	for rows.Next() {
 		var task entity.Task
-		err = rows.Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt, &task.ProjectID)
+		err = rows.Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt, &task.ProjectID, &task.UserID)
 		if err != nil {
 			return nil, err
 		}

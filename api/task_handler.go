@@ -24,7 +24,7 @@ func NewTaskHandler(s TaskService) *TaskHandler {
 type TaskService interface {
 	AddTask(ctx context.Context, task entity.Task) error
 	GetTask(ctx context.Context, id int64) (entity.Task, error)
-	GetAllTasks(ctx context.Context) ([]entity.Task, error)
+	GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
 }
 
@@ -94,8 +94,12 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
+	filter := entity.TaskFilter{
+		UserID:    r.URL.Query().Get("user_id"),
+		ProjectID: r.URL.Query().Get("project_id"),
+	}
 
-	tasks, err := h.service.GetAllTasks(r.Context()) //передаем контекст, полученный из запроса
+	tasks, err := h.service.GetAllTasks(r.Context(), filter) //передаем контекст, полученный из запроса
 	if err != nil {
 		HandlerError(w, err)
 		return

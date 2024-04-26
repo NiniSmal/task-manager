@@ -21,3 +21,8 @@ type UpdateTask struct {
 	Status string `json:"status"`
 	UserID int64  `json:"user_id"`
 }
+
+type TaskFilter struct {
+	UserID    string `json:"user_id"`
+	ProjectID string `json:"project_id"`
+}

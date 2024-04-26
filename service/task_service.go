@@ -21,7 +21,7 @@ func NewTaskService(r Repository) *TaskService {
 type Repository interface {
 	SaveTask(ctx context.Context, task entity.Task) error
 	GetTaskByID(ctx context.Context, id int64) (entity.Task, error)
-	GetTasks(ctx context.Context) ([]entity.Task, error)
+	GetTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
 }
 
@@ -61,8 +61,8 @@ func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error
 	}
 }
 
-func (s *TaskService) GetAllTasks(ctx context.Context) ([]entity.Task, error) {
-	tasks, err := s.repo.GetTasks(ctx)
+func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
+	tasks, err := s.repo.GetTasks(ctx, f)
 	if errors.Is(err, entity.ErrNotFound) {
 		return nil, fmt.Errorf("get all tasks: %w", err)
 	}
