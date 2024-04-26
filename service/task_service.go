@@ -63,7 +63,7 @@ func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error
 
 func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
 	tasks, err := s.repo.GetTasks(ctx, f)
-	if errors.Is(err, entity.ErrNotFound) {
+	if err != nil {
 		return nil, fmt.Errorf("get all tasks: %w", err)
 	}
 	return tasks, nil

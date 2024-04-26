@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/redis/go-redis/v9"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
@@ -43,12 +44,9 @@ func (r *TaskRepository) GetTaskByID(ctx context.Context, id int64) (entity.Task
 }
 
 func (r *TaskRepository) GetTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
-	var args []any
-	query := "SELECT id, name, status, created_at, project_id, user_id FROM tasks "
-	if f.UserID != "" {
-		query += "WHERE user_id = $1"
-		args = append(args, f)
-	}
+	query := "SELECT id, name, status, created_at, project_id, user_id FROM tasks"
+
+	query, args := applyTaskFilter(query, f)
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -70,6 +68,27 @@ func (r *TaskRepository) GetTasks(ctx context.Context, f entity.TaskFilter) ([]e
 	}
 
 	return tasks, nil
+}
+func applyTaskFilter(query string, f entity.TaskFilter) (string, []any) {
+	var args []any
+	where := ""
+
+	if f.UserID != "" {
+		args = append(args, f.UserID)
+		where += fmt.Sprintf("user_id = $%d", len(args))
+	}
+	if f.ProjectID != "" {
+		args = append(args, f.ProjectID)
+		if where != "" {
+			where += " AND "
+		}
+		where += fmt.Sprintf("project_id = $%d", len(args))
+	}
+	if where != "" {
+		query += " WHERE " + where
+	}
+
+	return query, args
 }
 
 func (r *TaskRepository) UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error {
