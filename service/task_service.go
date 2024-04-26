@@ -91,7 +91,7 @@ func (s *TaskService) GetTasksByProject(ctx context.Context, projectID int64) ([
 	if user.Role == entity.RoleAdmin {
 		return tasks, nil
 	}
-	if projectID == user.ID {
+	if tasks[0].UserID == user.ID {
 		return tasks, nil
 	} else {
 		return nil, err

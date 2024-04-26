@@ -21,7 +21,7 @@ func NewTaskRepository(db *sql.DB, rds *redis.Client) *TaskRepository {
 func (r *TaskRepository) SaveTask(ctx context.Context, task entity.Task) error {
 	query := "INSERT INTO tasks (name, status, created_at, user_id, project_id) VALUES ($1, $2, $3, $4, $5) "
 
-	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.CreatedAt, task.UserID)
+	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.CreatedAt, task.UserID, task.ProjectID)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (r *TaskRepository) GetUserTasks(ctx context.Context, userID int64) ([]enti
 }
 
 func (r *TaskRepository) GetTasksByProject(ctx context.Context, projectID int64) ([]entity.Task, error) {
-	query := "SELECT t.id, t.name, t.status, t.created_at FROM tasks t JOIN projects pr ON pr.id = t.project_id WHERE pr.id = $1"
+	query := "SELECT t.id, t.name, t.status, t.created_at, t.user_id,  t.project_id FROM tasks t JOIN projects pr ON t.project_id = pr.id  WHERE pr.id = $1"
 
 	rows, err := r.db.QueryContext(ctx, query, projectID)
 	if err != nil {
@@ -79,7 +79,7 @@ func (r *TaskRepository) GetTasksByProject(ctx context.Context, projectID int64)
 
 	for rows.Next() {
 		var task entity.Task
-		err = rows.Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt)
+		err = rows.Scan(&task.ID, &task.Name, &task.Status, &task.CreatedAt, &task.UserID, &task.ProjectID)
 		if err != nil {
 			return nil, err
 		}
