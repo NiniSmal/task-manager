@@ -13,6 +13,8 @@ paths:
   /tasks:
     get:
       summary: "get all tasks"
+      tags:
+        - tasks
       parameters:
         - name: user_id
           in: query
@@ -61,7 +63,9 @@ paths:
                       example: 10
 
     post:
-      description: Create a new task
+      summary: Create a new task
+      tags:
+        - tasks
       requestBody:
         content:
           application/json:
@@ -102,7 +106,9 @@ paths:
 
   /tasks/{id}:
     get:
-      description: Get task by ID
+      summary: Get task by ID
+      tags:
+        - tasks
       parameters:
         - name: id
           in: query
@@ -146,7 +152,9 @@ paths:
                       example: 10
 
     put:
-      description:  Update status task
+      summary: Update status task
+      tags:
+        - tasks
       parameters:
         - name: id
           in: query
@@ -176,7 +184,9 @@ paths:
 
   /users:
     post:
-      description: Registration
+      summary: Registration
+      tags:
+        - auth
       requestBody:
         content:
           application/json:
@@ -187,9 +197,11 @@ paths:
                   type: string
                   example: nina@mail.ru
                   format: email
+                  minimum: 5
+                  maximum: 200
                 password:
                   type: string
-                  example: 123
+                  example: 'qwerty'
                   format: password
       responses:
         '200':
@@ -202,7 +214,9 @@ paths:
 
   /login:
     post:
-      description: Login
+      summary: Login
+      tags:
+        - auth
       requestBody:
         content:
           application/json:
@@ -228,7 +242,9 @@ paths:
 
   /verification:
     get:
-      description: Verification
+      summary: Verification
+      tags:
+        - auth
       parameters:
         - name: code
           in: query
@@ -248,7 +264,9 @@ paths:
 
   /projects:
     post:
-      description: Create new project
+      summary: Create new project
+      tags:
+        - projects
       requestBody:
         content:
           application/json:
@@ -283,6 +301,8 @@ paths:
 
     get:
       summary: "Get all projects"
+      tags:
+        - projects
       responses:
         200:
           description: OK
@@ -313,7 +333,9 @@ paths:
 
   /projects/{id}:
     get:
-      description: Get project by ID
+      summary: Get project by ID
+      tags:
+       - projects
       parameters:
         - name: id
           in: query
@@ -351,7 +373,9 @@ paths:
                       example: 105
 
     put:
-      description: Update name project
+      summary: Update name project
+      tags:
+        - projects
       parameters:
         - name: id
           in: query
@@ -377,7 +401,9 @@ paths:
                 example: ''
 
     delete:
-      description: Delete project
+      summary: Delete project
+      tags:
+        - projects
       parameters:
         - name: id
           in: query
