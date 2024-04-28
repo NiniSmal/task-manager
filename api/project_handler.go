@@ -56,8 +56,7 @@ func (p *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 		HandlerError(w, err)
 		return
 	}
-
-	err = json.NewEncoder(w).Encode(project)
+	err = HandlerAnswerEncode(w, project)
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -70,10 +69,7 @@ func (p *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) 
 		HandlerError(w, err)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	err = json.NewEncoder(w).Encode(projects)
+	err = HandlerAnswerEncode(w, projects)
 	if err != nil {
 		HandlerError(w, err)
 		return

@@ -1,6 +1,15 @@
 package entity
 
-import "time"
+import (
+	"fmt"
+	"time"
+	"unicode/utf8"
+)
+
+const (
+	minNameTask = 5
+	maxNameTask = 200
+)
 
 const (
 	StatusNotDone = "not_done"
@@ -25,4 +34,15 @@ type UpdateTask struct {
 type TaskFilter struct {
 	UserID    string `json:"user_id"`
 	ProjectID string `json:"project_id"`
+}
+
+func (task *Task) Validate() error {
+	rt := utf8.RuneCountInString(task.Name)
+	if rt < minNameTask {
+		return fmt.Errorf("the name task must be minimum %d symbols", minNameTask)
+	}
+	if rt > maxNameTask {
+		return fmt.Errorf("the name task can be maximum %d symbols", maxNameTask)
+	}
+	return nil
 }

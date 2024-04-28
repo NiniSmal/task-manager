@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"time"
@@ -27,8 +26,9 @@ type ProjectRepository interface {
 }
 
 func (p *ProjectService) AddProject(ctx context.Context, project entity.Project) error {
-	if project.Name == "" {
-		return errors.New("empty name")
+	err := project.Validate()
+	if err != nil {
+		return fmt.Errorf("validation: %w", entity.ErrIncorrectName)
 	}
 	project.CreatedAt = time.Now()
 	project.UpdatedAt = project.CreatedAt
@@ -36,7 +36,7 @@ func (p *ProjectService) AddProject(ctx context.Context, project entity.Project)
 	user := ctx.Value("user").(entity.User)
 	project.UserID = user.ID
 
-	err := p.repo.SaveProject(ctx, project)
+	err = p.repo.SaveProject(ctx, project)
 	if err != nil {
 		return err
 	}

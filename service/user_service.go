@@ -50,12 +50,12 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 
 	err := user.Validate()
 	if err != nil {
-		return fmt.Errorf("validation: %w", err)
+		return entity.ErrIncorrectName
 	}
 
 	_, err = u.repo.UserByLogin(ctx, login)
 	if err == nil {
-		return entity.ErrLoginExists
+		return entity.ErrEmailExists
 	}
 
 	if !errors.Is(err, entity.ErrNotFound) {

@@ -38,14 +38,19 @@ func HandlerError(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 	case errors.Is(err, entity.ErrNotFound):
 		http.Error(w, err.Error(), http.StatusNotFound)
-	case errors.Is(err, entity.ErrLoginExists):
+	case errors.Is(err, entity.ErrEmailExists):
 		http.Error(w, err.Error(), http.StatusConflict)
+	case errors.Is(err, entity.ErrIncorrectName):
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	case errors.Is(err, entity.ErrIncorrectEmail):
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	default:
 		http.Error(w, "The problem is in program", http.StatusInternalServerError)
 	}
 }
 
-func (h *TaskHandler) HandlerAnswerEncode(w http.ResponseWriter, body any) error {
+func HandlerAnswerEncode(w http.ResponseWriter, body any) error {
+	w.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(body)
 	if err != nil {
 		return err
@@ -85,9 +90,7 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	err = h.HandlerAnswerEncode(w, task)
+	err = HandlerAnswerEncode(w, task)
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -104,10 +107,7 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		HandlerError(w, err)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	err = h.HandlerAnswerEncode(w, tasks)
+	err = HandlerAnswerEncode(w, tasks)
 	if err != nil {
 		HandlerError(w, err)
 		return

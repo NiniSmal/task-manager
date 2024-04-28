@@ -26,8 +26,9 @@ type Repository interface {
 }
 
 func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
-	if task.Name == "" {
-		return errors.New("name is empty")
+	err := task.Validate()
+	if err != nil {
+		return entity.ErrIncorrectName
 	}
 
 	task.Status = entity.StatusNotDone
@@ -37,7 +38,7 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 
 	task.UserID = user.ID
 
-	err := s.repo.SaveTask(ctx, task)
+	err = s.repo.SaveTask(ctx, task)
 	if err != nil {
 		return fmt.Errorf("save task: %w", err)
 	}

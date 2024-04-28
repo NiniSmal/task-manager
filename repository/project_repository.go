@@ -102,3 +102,7 @@ func (p *ProjectRepository) DeleteProject(ctx context.Context, id int64) error {
 
 	return nil
 }
+
+func (p *ProjectRepository) AddProjectMembers() {
+
+}
