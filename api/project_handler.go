@@ -21,10 +21,11 @@ func NewProjectHandler(s ProjectService) *ProjectHandler {
 
 type ProjectService interface {
 	AddProject(ctx context.Context, project entity.Project) error
-	GetProject(ctx context.Context, id int64) (entity.Project, error)
-	GetAllProjects(ctx context.Context) ([]entity.Project, error)
+	ProjectByID(ctx context.Context, id int64) (entity.Project, error)
+	Projects(ctx context.Context) ([]entity.Project, error)
 	UpdateProject(ctx context.Context, id int64, project entity.Project) error
 	DeleteProject(ctx context.Context, id int64) error
+	AddProjectMembers(ctx context.Context, projectID int64, userID int64) error
 }
 
 func (p *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +44,7 @@ func (p *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (p *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
+func (p *ProjectHandler) ProjectByID(w http.ResponseWriter, r *http.Request) {
 	idR := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idR, 10, 64)
 	if err != nil {
@@ -51,25 +52,26 @@ func (p *ProjectHandler) GetProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := p.service.GetProject(r.Context(), id)
+	project, err := p.service.ProjectByID(r.Context(), id)
 	if err != nil {
 		HandlerError(w, err)
 		return
 	}
-	err = HandlerAnswerEncode(w, project)
+	err = sendJSON(w, project)
 	if err != nil {
 		HandlerError(w, err)
 		return
 	}
 }
 
-func (p *ProjectHandler) GetAllProjects(w http.ResponseWriter, r *http.Request) {
-	projects, err := p.service.GetAllProjects(r.Context()) //передаем контекст, полученный из запроса
+func (p *ProjectHandler) Projects(w http.ResponseWriter, r *http.Request) {
+	projects, err := p.service.Projects(r.Context())
 	if err != nil {
 		HandlerError(w, err)
 		return
 	}
-	err = HandlerAnswerEncode(w, projects)
+
+	err = sendJSON(w, projects)
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -80,7 +82,7 @@ func (p *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	idR := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idR)
+	id, err := strconv.ParseInt(idR, 10, 64)
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -93,7 +95,7 @@ func (p *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.service.UpdateProject(ctx, int64(id), project)
+	err = p.service.UpdateProject(ctx, id, project)
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -113,4 +115,28 @@ func (p *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 		HandlerError(w, err)
 		return
 	}
+}
+
+type AddProjectMemberRequest struct {
+	ProjectID int64 `json:"project_id"`
+	UserID    int64 `json:"user_id"`
+}
+
+func (p *ProjectHandler) AddProjectMember(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var data AddProjectMemberRequest
+
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
+
+	err = p.service.AddProjectMembers(ctx, data.ProjectID, data.UserID)
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
+
 }

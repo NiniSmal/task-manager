@@ -44,12 +44,14 @@ func HandlerError(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	case errors.Is(err, entity.ErrIncorrectEmail):
 		http.Error(w, err.Error(), http.StatusBadRequest)
+	case errors.Is(err, entity.ErrForbidden):
+		http.Error(w, err.Error(), http.StatusForbidden)
 	default:
-		http.Error(w, "The problem is in program", http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
 
-func HandlerAnswerEncode(w http.ResponseWriter, body any) error {
+func sendJSON(w http.ResponseWriter, body any) error {
 	w.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(body)
 	if err != nil {
@@ -90,7 +92,7 @@ func (h *TaskHandler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = HandlerAnswerEncode(w, task)
+	err = sendJSON(w, task)
 	if err != nil {
 		HandlerError(w, err)
 		return
@@ -107,7 +109,7 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		HandlerError(w, err)
 		return
 	}
-	err = HandlerAnswerEncode(w, tasks)
+	err = sendJSON(w, tasks)
 	if err != nil {
 		HandlerError(w, err)
 		return

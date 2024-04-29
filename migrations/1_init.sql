@@ -35,7 +35,17 @@ CREATE TABLE tasks
     project_id BIGINT REFERENCES projects (id) NOT NULL
 );
 
+CREATE TABLE user_projects
+(
+    user_id    BIGINT REFERENCES users (id)    NOT NULL,
+    project_id BIGINT REFERENCES projects (id) NOT NULL,
+    PRIMARY KEY (user_id, project_id)
+
+
+);
+
 -- +goose Down
+DROP TABLE user_projects;
 DROP TABLE tasks;
 DROP TABLE projects;
 DROP TABLE sessions;

@@ -8,6 +8,7 @@ import (
 )
 
 type Role string
+type View string
 
 const (
 	RoleUser  Role = "user"

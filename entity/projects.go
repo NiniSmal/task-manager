@@ -19,6 +19,10 @@ type Project struct {
 	UserID    int64     `json:"user_id"`
 }
 
+type ProjectFilter struct {
+	UserID int64
+}
+
 func (project *Project) Validate() error {
 	rp := utf8.RuneCountInString(project.Name)
 	if rp < minNameProject {

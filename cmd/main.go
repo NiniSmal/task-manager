@@ -96,10 +96,11 @@ func main() {
 	router.Group(func(r chi.Router) {
 		r.Use(mw.AuthHandler)
 		r.Post("/api/projects", hp.CreateProject)
-		r.Get("/api/projects", hp.GetAllProjects)
-		r.Get("/api/projects/{id}", hp.GetProject)
+		r.Get("/api/projects", hp.Projects)
+		r.Get("/api/projects/{id}", hp.ProjectByID)
 		r.Put("/api/projects/{id}", hp.UpdateProject)
 		r.Delete("/api/projects/{id}", hp.DeleteProject)
+		r.Post("/api/project/users", hp.AddProjectMember)
 
 		r.Get("/api/tasks", ht.GetAllTasks)
 		r.Post("/api/tasks", ht.CreateTask)

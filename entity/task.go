@@ -32,8 +32,8 @@ type UpdateTask struct {
 }
 
 type TaskFilter struct {
-	UserID    string `json:"user_id"`
-	ProjectID string `json:"project_id"`
+	UserID    string
+	ProjectID string
 }
 
 func (task *Task) Validate() error {
