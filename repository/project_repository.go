@@ -62,7 +62,7 @@ func (p *ProjectRepository) ProjectByID(ctx context.Context, id int64) (entity.P
 func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectFilter) (projects []entity.Project, err error) {
 	query := "SELECT id, name, created_at, updated_at, user_id FROM projects"
 	if filter.UserID != 0 {
-		query += fmt.Sprintf("WHERE user_id = %d", filter.UserID)
+		query += fmt.Sprintf(" WHERE user_id = %d", filter.UserID)
 	}
 
 	rows, err := p.db.QueryContext(ctx, query)
@@ -136,10 +136,14 @@ func (p *ProjectRepository) addProjectMembersByID(ctx context.Context, userID in
 	return nil
 }
 
-func (p *ProjectRepository) UserProjects(ctx context.Context, userID int64) ([]entity.Project, error) {
-	query := "SELECT p.id, p.name, p.created_at, p.updated_at, p.user_id FROM projects p JOIN user_projects up ON p.user_id = up.user_id WHERE up.user_id = $1 "
+func (p *ProjectRepository) UserProjects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error) {
+	query := "SELECT p.id, p.name, p.created_at, p.updated_at, p.user_id FROM projects p  JOIN user_projects up  ON p.id = up.project_id"
 
-	rows, err := p.db.QueryContext(ctx, query, userID)
+	if filter.UserID != 0 {
+		query += fmt.Sprintf(" WHERE up.user_id = %d", filter.UserID)
+	}
+
+	rows, err := p.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}

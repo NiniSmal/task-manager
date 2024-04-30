@@ -26,6 +26,7 @@ type ProjectService interface {
 	UpdateProject(ctx context.Context, id int64, project entity.Project) error
 	DeleteProject(ctx context.Context, id int64) error
 	AddProjectMembers(ctx context.Context, projectID int64, userID int64) error
+	UserProjects(ctx context.Context) ([]entity.Project, error)
 }
 
 func (p *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
@@ -134,6 +135,21 @@ func (p *ProjectHandler) AddProjectMember(w http.ResponseWriter, r *http.Request
 	}
 
 	err = p.service.AddProjectMembers(ctx, data.ProjectID, data.UserID)
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
+
+}
+
+func (p *ProjectHandler) UserProjects(w http.ResponseWriter, r *http.Request) {
+	projects, err := p.service.UserProjects(r.Context())
+	if err != nil {
+		HandlerError(w, err)
+		return
+	}
+
+	err = sendJSON(w, projects)
 	if err != nil {
 		HandlerError(w, err)
 		return

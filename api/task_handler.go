@@ -104,7 +104,7 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		ProjectID: r.URL.Query().Get("project_id"),
 	}
 
-	tasks, err := h.service.GetAllTasks(r.Context(), filter) //передаем контекст, полученный из запроса
+	tasks, err := h.service.GetAllTasks(r.Context(), filter)
 	if err != nil {
 		HandlerError(w, err)
 		return
