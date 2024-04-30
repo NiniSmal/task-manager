@@ -25,7 +25,7 @@ func NewUserRepository(db *sql.DB, rds *redis.Client) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(ctx context.Context, user entity.User) error {
-	query := "INSERT INTO users ( login, password, created_at, role, verification, verification_code ) VALUES ($1, $2, $3, $4, $5, $6)"
+	query := "INSERT INTO users ( email, password, created_at, role, verification, verification_code ) VALUES ($1, $2, $3, $4, $5, $6)"
 
 	_, err := r.db.ExecContext(ctx, query, user.Email, user.Password, user.CreatedAt, user.Role, user.Verification, user.VerificationCode)
 	if err != nil {
@@ -61,12 +61,12 @@ func (r *UserRepository) saveSessionToCache(ctx context.Context, sessionID uuid.
 	return nil
 }
 
-func (r *UserRepository) UserByLogin(ctx context.Context, login string) (entity.User, error) {
-	query := "SELECT id, login, password, created_at, role, verification, verification_code FROM users WHERE login = $1"
+func (r *UserRepository) UserByLogin(ctx context.Context, email string) (entity.User, error) {
+	query := "SELECT id, email, password, created_at, role, verification, verification_code FROM users WHERE email = $1"
 
 	var user entity.User
 
-	err := r.db.QueryRowContext(ctx, query, login).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.Role, &user.Verification, &user.VerificationCode)
+	err := r.db.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.Role, &user.Verification, &user.VerificationCode)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return entity.User{}, entity.ErrNotFound
@@ -93,7 +93,7 @@ func (r *UserRepository) GetSession(ctx context.Context, sessionID uuid.UUID) (e
 
 	log.Printf("get session from cache: %s ", err)
 
-	query := "SELECT user_id, login, created_at, verification, role FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.id = $1"
+	query := "SELECT user_id, email, created_at, verification, role FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.id = $1"
 
 	err = r.db.QueryRowContext(ctx, query, sessionID).Scan(&user.ID, &user.Email, &user.CreatedAt, &user.Verification, &user.Role)
 	if err != nil {
