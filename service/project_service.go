@@ -30,7 +30,7 @@ type ProjectRepository interface {
 func (p *ProjectService) AddProject(ctx context.Context, project entity.Project) error {
 	err := project.Validate()
 	if err != nil {
-		return fmt.Errorf("validation: %w", entity.ErrIncorrectName)
+		return err
 	}
 	project.CreatedAt = time.Now()
 	project.UpdatedAt = project.CreatedAt

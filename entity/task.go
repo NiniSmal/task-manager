@@ -39,10 +39,14 @@ type TaskFilter struct {
 func (task *Task) Validate() error {
 	rt := utf8.RuneCountInString(task.Name)
 	if rt < minNameTask {
-		return fmt.Errorf("the name task must be minimum %d symbols", minNameTask)
+		return fmt.Errorf("%w: the name task must be minimum %d symbols", ErrValidate, minNameTask)
 	}
 	if rt > maxNameTask {
-		return fmt.Errorf("the name task can be maximum %d symbols", maxNameTask)
+		return fmt.Errorf("%w: the name task can be maximum %d symbols", ErrValidate, maxNameTask)
 	}
+	if task.ProjectID == 0 {
+		return fmt.Errorf("%w: project ID is empty", ErrValidate)
+	}
+
 	return nil
 }

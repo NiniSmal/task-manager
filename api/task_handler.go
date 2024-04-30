@@ -27,28 +27,38 @@ type TaskService interface {
 	GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
 }
+type apiError struct {
+	Error string `json:"error"`
+}
 
 func HandlerError(w http.ResponseWriter, err error) {
-	log.Println("API error:", err)
+
+	errText := http.StatusText(http.StatusInternalServerError)
+	errCode := http.StatusInternalServerError
 
 	switch {
 	case errors.Is(err, entity.ErrNotVerification):
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		errText, errCode = err.Error(), http.StatusUnauthorized
 	case errors.Is(err, entity.ErrNotAuthenticated):
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		errText, errCode = err.Error(), http.StatusUnauthorized
 	case errors.Is(err, entity.ErrNotFound):
-		http.Error(w, err.Error(), http.StatusNotFound)
+		errText, errCode = err.Error(), http.StatusNotFound
 	case errors.Is(err, entity.ErrEmailExists):
-		http.Error(w, err.Error(), http.StatusConflict)
-	case errors.Is(err, entity.ErrIncorrectName):
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	case errors.Is(err, entity.ErrIncorrectEmail):
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errText, errCode = err.Error(), http.StatusConflict
+	case errors.Is(err, entity.ErrValidate):
+		errText, errCode = err.Error(), http.StatusBadRequest
 	case errors.Is(err, entity.ErrForbidden):
-		http.Error(w, err.Error(), http.StatusForbidden)
-	default:
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		errText, errCode = err.Error(), http.StatusForbidden
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(errCode)
+
+	err = json.NewEncoder(w).Encode(apiError{Error: errText})
+	if err != nil {
+		log.Println("API error:", err)
+	}
+
 }
 
 func sendJSON(w http.ResponseWriter, body any) error {

@@ -30,7 +30,7 @@ type TaskRepository interface {
 func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 	err := task.Validate()
 	if err != nil {
-		return entity.ErrIncorrectName
+		return err
 	}
 
 	user := ctx.Value("user").(entity.User)

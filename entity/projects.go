@@ -27,10 +27,10 @@ type ProjectFilter struct {
 func (project *Project) Validate() error {
 	rp := utf8.RuneCountInString(project.Name)
 	if rp < minNameProject {
-		return fmt.Errorf("the name project must be minimum %d symbols", minNameProject)
+		return fmt.Errorf("%w: the name project must be minimum %d symbols", ErrValidate, minNameProject)
 	}
 	if rp > maxNameProject {
-		return fmt.Errorf("the name project can be maximum %d symbols", maxNameProject)
+		return fmt.Errorf("%w: the name project can be maximum %d symbols", ErrValidate, maxNameProject)
 	}
 	return nil
 }

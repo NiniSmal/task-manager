@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"errors"
 	"fmt"
 	"time"
 	"unicode/utf8"
@@ -33,13 +32,13 @@ type User struct {
 func (user *User) Validate() error {
 	rl := utf8.RuneCountInString(user.Email)
 	if rl < minLogin {
-		return fmt.Errorf("the login must be minimum %d symbols", minLogin)
+		return fmt.Errorf("%w: the login must be minimum %d symbols", ErrValidate, minLogin)
 	}
 	if rl > maxLogin {
-		return fmt.Errorf("the login can be max %d symbols", maxLogin)
+		return fmt.Errorf("%w: the login can be max %d symbols", ErrValidate, maxLogin)
 	}
 	if user.Password == "" {
-		return errors.New("the password can't be empty")
+		return fmt.Errorf("%w: the password can't be empty", ErrValidate)
 	}
 	return nil
 }
