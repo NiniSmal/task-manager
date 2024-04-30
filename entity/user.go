@@ -23,11 +23,11 @@ const (
 type User struct {
 	ID               int64     `json:"id"`
 	Email            string    `json:"email"`
-	Password         string    `json:"password"`
+	Password         string    `json:"password,omitempty"`
 	CreatedAt        time.Time `json:"created_at"`
 	Role             Role      `json:"role"`
-	Verification     bool      `json:"verification"`
-	VerificationCode string    `json:"verification_code"`
+	Verification     bool      `json:"verification,omitempty"`
+	VerificationCode string    `json:"verification_code,omitempty"`
 }
 
 func (user *User) Validate() error {

@@ -162,3 +162,28 @@ func (p *ProjectRepository) UserProjects(ctx context.Context, filter entity.Proj
 	}
 	return projects, nil
 }
+
+func (p *ProjectRepository) ProjectUsers(ctx context.Context, projectID int64) ([]entity.User, error) {
+	query := "SELECT id, login,  created_at, role  FROM users  JOIN user_projects ON users.id = user_projects.user_id WHERE project_id = $1"
+
+	rows, err := p.db.QueryContext(ctx, query, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []entity.User
+
+	for rows.Next() {
+		var user entity.User
+
+		err = rows.Scan(&user.ID, &user.Email, &user.CreatedAt, &user.Role)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}

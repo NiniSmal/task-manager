@@ -24,6 +24,7 @@ type ProjectRepository interface {
 	UpdateProject(ctx context.Context, id int64, project entity.Project) error
 	DeleteProject(ctx context.Context, id int64) error
 	UserProjects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error)
+	ProjectUsers(ctx context.Context, projectID int64) ([]entity.User, error)
 }
 
 func (p *ProjectService) AddProject(ctx context.Context, project entity.Project) error {
@@ -45,16 +46,23 @@ func (p *ProjectService) AddProject(ctx context.Context, project entity.Project)
 	return nil
 }
 
-func (p *ProjectService) ProjectByID(ctx context.Context, id int64) (entity.Project, error) {
-	project, err := p.repo.ProjectByID(ctx, id)
+func (p *ProjectService) ProjectByID(ctx context.Context, projectID int64) (entity.Project, error) {
+	project, err := p.repo.ProjectByID(ctx, projectID)
 	if err != nil {
-		return entity.Project{}, fmt.Errorf("get project by id %d :%w", id, err)
+		return entity.Project{}, fmt.Errorf("get project by id %d :%w", projectID, err)
 	}
 
 	user := ctx.Value("user").(entity.User)
 	if user.Role != entity.RoleAdmin && project.UserID != user.ID {
-		return entity.Project{}, fmt.Errorf("get project by id %d :%w", id, entity.ErrForbidden)
+		return entity.Project{}, fmt.Errorf("get project by id %d :%w", projectID, entity.ErrForbidden)
 	}
+
+	members, err := p.repo.ProjectUsers(ctx, projectID)
+	if err != nil {
+		return entity.Project{}, fmt.Errorf("get project %d members: %w", projectID, err)
+	}
+
+	project.Members = members
 
 	return project, nil
 }

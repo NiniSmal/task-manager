@@ -17,6 +17,7 @@ type Project struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	UserID    int64     `json:"user_id"`
+	Members   []User    `json:"members"`
 }
 
 type ProjectFilter struct {
