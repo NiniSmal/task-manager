@@ -82,7 +82,7 @@ func main() {
 	sp := service.NewProjectService(rp)
 	hp := api.NewProjectHandler(sp)
 	rt := repository.NewTaskRepository(db, rds)
-	st := service.NewTaskService(rt)
+	st := service.NewTaskService(rt, rp)
 	ht := api.NewTaskHandler(st)
 	ut := repository.NewUserRepository(db, rds)
 	su := service.NewUserService(ut, kafkaWriter, cfg.AppURL)

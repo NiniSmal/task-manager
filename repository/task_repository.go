@@ -19,7 +19,7 @@ func NewTaskRepository(db *sql.DB, rds *redis.Client) *TaskRepository {
 		rds: rds,
 	}
 }
-func (r *TaskRepository) SaveTask(ctx context.Context, task entity.Task) error {
+func (r *TaskRepository) Create(ctx context.Context, task entity.Task) error {
 	query := "INSERT INTO tasks (name, status, created_at, user_id, project_id) VALUES ($1, $2, $3, $4, $5) "
 
 	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.CreatedAt, task.UserID, task.ProjectID)
@@ -30,7 +30,7 @@ func (r *TaskRepository) SaveTask(ctx context.Context, task entity.Task) error {
 	return nil
 }
 
-func (r *TaskRepository) GetTaskByID(ctx context.Context, id int64) (entity.Task, error) {
+func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error) {
 	query := "SELECT id, name, status, created_at, user_id, project_id FROM tasks WHERE id=$1"
 
 	var task entity.Task
@@ -43,7 +43,7 @@ func (r *TaskRepository) GetTaskByID(ctx context.Context, id int64) (entity.Task
 	return task, nil
 }
 
-func (r *TaskRepository) GetTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
+func (r *TaskRepository) Tasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
 	query := "SELECT id, name, status, created_at, project_id, user_id FROM tasks"
 
 	query, args := applyTaskFilter(query, f)
@@ -91,7 +91,7 @@ func applyTaskFilter(query string, f entity.TaskFilter) (string, []any) {
 	return query, args
 }
 
-func (r *TaskRepository) UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error {
+func (r *TaskRepository) Update(ctx context.Context, id int64, task entity.UpdateTask) error {
 	query := "UPDATE tasks SET name = $1, status = $2 WHERE id = $3"
 
 	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, id)
