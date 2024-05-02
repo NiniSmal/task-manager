@@ -81,7 +81,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		MaxAge:     3600,
 		Secure:     false,
 		HttpOnly:   true,
-		SameSite:   http.SameSiteLaxMode,
+		SameSite:   http.SameSiteNoneMode,
 		Raw:        "",
 		Unparsed:   nil,
 	}
