@@ -72,16 +72,16 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	l.Info(fmt.Sprintf("login OK session_id: %s", sessionID))
 
 	cookie := http.Cookie{
-		Name:       "session_id",
-		Value:      sessionID.String(),
-		Path:       "/",
-		Domain:     u.appHost,
+		Name:  "session_id",
+		Value: sessionID.String(),
+		Path:  "/",
+		// Domain:     u.appHost,
 		Expires:    time.Now().Add(time.Hour),
 		RawExpires: "",
 		MaxAge:     3600,
 		Secure:     false,
-		HttpOnly:   false,
-		SameSite:   http.SameSiteNoneMode,
+		HttpOnly:   true,
+		SameSite:   http.SameSiteLaxMode,
 		Raw:        "",
 		Unparsed:   nil,
 	}
