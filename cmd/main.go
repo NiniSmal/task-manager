@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
@@ -28,7 +30,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%+v", cfg)
+
+	h := slog.Handler(slog.NewTextHandler(os.Stdout, nil))
+	if cfg.LogJson {
+		h = slog.NewTextHandler(os.Stdout, nil)
+	}
+	logger := slog.New(h)
 
 	db, err := sql.Open("postgres", cfg.Postgres)
 	if err != nil {
@@ -38,7 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("db - OK")
+	logger.Info("Connected to Postgres OK")
 	defer db.Close()
 
 	ctx := context.Background()
@@ -48,17 +55,18 @@ func main() {
 		DB:       0,
 	})
 
-	pong, err := rds.Ping(ctx).Result()
+	_, err = rds.Ping(ctx).Result()
 	if err != nil {
 		log.Fatal("Error connecting to Redis:", err)
 	}
-	fmt.Println("Connected to Redis:", pong)
+	logger.Info("Connected to Redis OK")
 
 	defer rds.Close()
 
 	// make migrations
-	log.Printf("Start migrating database \n")
+	logger.Info("Start migrating database")
 	// применяем все возможные миграции
+	goose.SetLogger(goose.NopLogger())
 	err = goose.Up(db, "migrations")
 	if err != nil {
 		log.Fatal(err)
@@ -88,10 +96,10 @@ func main() {
 	su := service.NewUserService(ut, kafkaWriter, cfg.AppURL)
 	hu := api.NewUserHandler(su)
 	// midll такой же обработчик, поэтому так же принимает репозиторий
-	mw := api.NewMiddleware(ut)
+	mw := api.NewMiddleware(ut, logger)
 	router := chi.NewRouter()
 
-	router.Use(api.Logging, api.ResponseHeader)
+	router.Use(mw.Logging, mw.ResponseHeader)
 	// для части обработчиков создаем группу с доп. middleware для авторизации, тк она нужна не для всех обработчиков
 	router.Group(func(r chi.Router) {
 		r.Use(mw.AuthHandler)
@@ -113,7 +121,8 @@ func main() {
 	router.Post("/api/login", hu.Login)
 	router.Get("/api/verification", hu.Verification)
 
-	log.Println("start http server at port:", cfg.Port)
+	logger.Info(fmt.Sprintf("start http server at port: %v", cfg.Port))
+
 	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), router)
 	if err != nil {
 		log.Fatal(err)

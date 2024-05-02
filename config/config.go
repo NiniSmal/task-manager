@@ -14,6 +14,7 @@ type Config struct {
 	KafkaTopicCreateUser string `env:"KAFKA_TOPIC_CREATE_USER"`
 	MailServiceAddr      string `env:"MAIL_SERVICE_ADDR"`
 	AppURL               string `env:"APP_URL"`
+	LogJson              bool   `env:"LOG_JSON"`
 }
 
 func GetConfig() (*Config, error) {

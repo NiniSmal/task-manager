@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -28,37 +29,44 @@ type UserService interface {
 }
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var user entity.User
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		HandlerError(w, err)
+		HandlerError(ctx, w, err)
 		return
 	}
 
-	err = u.service.CreateUser(r.Context(), user.Email, user.Password)
+	err = u.service.CreateUser(ctx, user.Email, user.Password)
 	if err != nil {
-		HandlerError(w, err)
+		HandlerError(ctx, w, err)
 		return
 	}
 
 }
 
 func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var user entity.User
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		HandlerError(w, err)
+		HandlerError(ctx, w, err)
 		return
 	}
 
 	sessionID, err := u.service.Login(r.Context(), user.Email, user.Password)
-
 	if err != nil {
-		HandlerError(w, err)
+		HandlerError(ctx, w, err)
 		return
 	}
+
+	l := r.Context().Value("logger").(*slog.Logger)
+
+	l.Info(fmt.Sprintf("login OK session_id: %s", sessionID))
 
 	cookie := http.Cookie{
 		Name:       "session_id",
@@ -78,20 +86,22 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHandler) Verification(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var user entity.User
 
 	code := r.URL.Query().Get("code")
 	if code == "" {
-		HandlerError(w, errors.New("code is empty"))
+		HandlerError(ctx, w, errors.New("code is empty"))
 		return
 	}
 
 	user.VerificationCode = code
 	user.Verification = true
 
-	err := u.service.Verification(r.Context(), user.VerificationCode, user.Verification)
+	err := u.service.Verification(ctx, user.VerificationCode, user.Verification)
 	if err != nil {
-		HandlerError(w, err)
+		HandlerError(ctx, w, err)
 	}
 
 	_, _ = fmt.Fprintln(w, "verification successful, now you can login")

@@ -5,17 +5,19 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
 type Middleware struct {
 	repo SessionRepository
+	l    *slog.Logger
 }
 
-func NewMiddleware(r SessionRepository) *Middleware {
+func NewMiddleware(r SessionRepository, l *slog.Logger) *Middleware {
 	return &Middleware{
 		repo: r,
+		l:    l,
 	}
 }
 
@@ -23,15 +25,18 @@ type SessionRepository interface {
 	GetSession(ctx context.Context, sessionID uuid.UUID) (entity.User, error)
 }
 
-func Logging(next http.Handler) http.Handler {
+func (m *Middleware) Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s", r.Method, r.URL.Path)
-		next.ServeHTTP(w, r)
+		l := m.l.With("request_id", uuid.NewString())
+		l.Info("incoming request", "method", r.Method, "path", r.URL.Path)
+		ctx := context.WithValue(r.Context(), "logger", l)
+		r = r.WithContext(ctx)
 
+		next.ServeHTTP(w, r)
 	})
 }
 
-func ResponseHeader(next http.Handler) http.Handler {
+func (m *Middleware) ResponseHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Header().Add("Access-Control-Allow-Methods", "*")
@@ -52,22 +57,22 @@ func (m *Middleware) AuthHandler(next http.Handler) http.Handler {
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
 			if errors.Is(err, http.ErrNoCookie) {
-				HandlerError(w, entity.ErrNotAuthenticated)
+				HandlerError(ctx, w, entity.ErrNotAuthenticated)
 				return
 			}
-			HandlerError(w, err)
+			HandlerError(ctx, w, err)
 			return
 		}
 
 		sessionID, err := uuid.Parse(cookie.Value) //записанное значение Cookie при создании клиента записываем в sessionID
 		if err != nil {
-			HandlerError(w, err)
+			HandlerError(ctx, w, err)
 			return
 		}
 
 		user, err := m.repo.GetSession(ctx, sessionID) //в таблице связи  возвращаем нужный userID
 		if err != nil {
-			HandlerError(w, err)
+			HandlerError(ctx, w, err)
 			return
 		}
 
