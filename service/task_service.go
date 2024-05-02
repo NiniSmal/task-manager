@@ -57,27 +57,38 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 	if err != nil {
 		return fmt.Errorf("save task: %w", err)
 	}
-	//при создании задачи в проекте слать уведомление об этом всем участникам проекта
-	usersEmail, err := s.projects.ProjectUsers(ctx, task.ProjectID)
+
+	err = s.sendCreateTaskNatification(ctx, task.ProjectID)
 	if err != nil {
 		return err
 	}
-	var emails []SendEmail
-	for _, userTo := range usersEmail {
-		email := SendEmail{
-			Text: fmt.Sprintf("New task created in project  %d", task.ProjectID),
-			To:   userTo.Email,
-		}
-		emails = append(emails, email)
-	}
-	msg, err := json.Marshal(&emails)
+	return nil
+}
+
+func (s *TaskService) sendCreateTaskNatification(ctx context.Context, projectID int64) error {
+	//при создании задачи в проекте слать уведомление об этом всем участникам проекта
+	userEmails, err := s.projects.ProjectUsers(ctx, projectID)
 	if err != nil {
-		return fmt.Errorf("failed to marshal message: , %w", err)
+		return err
 	}
 
-	err = s.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
-	if err != nil {
-		return fmt.Errorf("failed to write messages %w", err)
+	for _, userTo := range userEmails {
+		if userTo.ID == ctx.Value("user_id").(entity.User).ID {
+			continue
+		}
+		email := SendEmail{
+			Text: fmt.Sprintf("New task created in project  %d", projectID),
+			To:   userTo.Email,
+		}
+		msg, err := json.Marshal(&email)
+		if err != nil {
+			return fmt.Errorf("failed to marshal message: , %w", err)
+		}
+
+		err = s.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
+		if err != nil {
+			return fmt.Errorf("failed to write messages %w", err)
+		}
 	}
 	return nil
 }
