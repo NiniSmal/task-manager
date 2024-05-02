@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"gitlab.com/nina8884807/task-manager/entity"
+	"log/slog"
 	"time"
 )
 
@@ -58,28 +59,35 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 		return fmt.Errorf("save task: %w", err)
 	}
 
-	err = s.sendCreateTaskNatification(ctx, task.ProjectID)
+	err = s.sendCreateTaskNotification(ctx, task.ProjectID)
 	if err != nil {
-		return err
+		l := ctx.Value("logger").(*slog.Logger)
+		l.Error("sendCreateTaskNotification", "err", err)
+		err = nil
 	}
+
 	return nil
 }
 
-func (s *TaskService) sendCreateTaskNatification(ctx context.Context, projectID int64) error {
+func (s *TaskService) sendCreateTaskNotification(ctx context.Context, projectID int64) error {
 	//при создании задачи в проекте слать уведомление об этом всем участникам проекта
 	userEmails, err := s.projects.ProjectUsers(ctx, projectID)
 	if err != nil {
 		return err
 	}
 
+	user := ctx.Value("user_id").(entity.User)
+
 	for _, userTo := range userEmails {
-		if userTo.ID == ctx.Value("user_id").(entity.User).ID {
+		if userTo.ID == user.ID {
 			continue
 		}
+
 		email := SendEmail{
 			Text: fmt.Sprintf("New task created in project  %d", projectID),
 			To:   userTo.Email,
 		}
+
 		msg, err := json.Marshal(&email)
 		if err != nil {
 			return fmt.Errorf("failed to marshal message: , %w", err)
@@ -90,6 +98,7 @@ func (s *TaskService) sendCreateTaskNatification(ctx context.Context, projectID 
 			return fmt.Errorf("failed to write messages %w", err)
 		}
 	}
+
 	return nil
 }
 
