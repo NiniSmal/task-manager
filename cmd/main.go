@@ -77,14 +77,14 @@ func main() {
 	if err != nil {
 		log.Fatal("dial kafka:", err)
 	}
-	connKafka.Close()
-
+	defer connKafka.Close()
 	kafkaWriter := &kafka.Writer{
 		Addr:                   kafka.TCP(cfg.KafkaAddr),
 		Topic:                  cfg.KafkaTopicCreateUser,
 		Balancer:               &kafka.LeastBytes{},
 		AllowAutoTopicCreation: true,
 	}
+
 	defer kafkaWriter.Close()
 
 	appURL, err := url.Parse(cfg.AppURL)

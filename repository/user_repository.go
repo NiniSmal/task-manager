@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"gitlab.com/nina8884807/task-manager/entity"
-	"log"
 	"time"
 )
 
@@ -91,9 +90,7 @@ func (r *UserRepository) GetSession(ctx context.Context, sessionID uuid.UUID) (e
 		return user, nil
 	}
 
-	log.Printf("get session from cache: %s ", err)
-
-	query := "SELECT user_id, email, created_at, verification, role FROM users JOIN sessions ON users.id = sessions.user_id WHERE sessions.id = $1"
+	query := "SELECT u.id, u.email, u.created_at, u.verification, u.role FROM users u JOIN sessions ON u.id = sessions.user_id WHERE sessions.id = $1"
 
 	err = r.db.QueryRowContext(ctx, query, sessionID).Scan(&user.ID, &user.Email, &user.CreatedAt, &user.Verification, &user.Role)
 	if err != nil {
