@@ -6,6 +6,7 @@ info:
   description: Task manager can work with tasks
 
 servers:
+  - url: http://localhost:8080/api
   - url: http://localhost:8021/api
   - url: https://tm.anaxita.ru/api
 
@@ -229,7 +230,7 @@ paths:
                   format: email
                 password:
                   type: string
-                  example: 123
+                  example: '123'
                   format: password
       responses:
         '200':

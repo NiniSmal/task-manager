@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/go-chi/chi/v5"
-	"gitlab.com/nina8884807/task-manager/entity"
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"gitlab.com/nina8884807/task-manager/entity"
 )
 
 type TaskHandler struct {
-	service TaskService //зависимость, чтобы выполнить задачу нужен метод другого типа
+	service TaskService // зависимость, чтобы выполнить задачу нужен метод другого типа
 }
 
 func NewTaskHandler(s TaskService) *TaskHandler {
@@ -32,6 +33,8 @@ type apiError struct {
 }
 
 func HandlerError(ctx context.Context, w http.ResponseWriter, err error) {
+	l := ctx.Value("logger").(*slog.Logger)
+	l.Error("Api response", "error", err.Error())
 
 	errText := http.StatusText(http.StatusInternalServerError)
 	errCode := http.StatusInternalServerError
@@ -53,13 +56,11 @@ func HandlerError(ctx context.Context, w http.ResponseWriter, err error) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(errCode)
-	l := ctx.Value("logger").(*slog.Logger)
 
 	err = json.NewEncoder(w).Encode(apiError{Error: errText})
 	if err != nil {
 		l.Error("Encode", "error", err)
 	}
-	l.Error("Api response", "error", errText)
 }
 
 func sendJSON(w http.ResponseWriter, body any) error {
@@ -83,7 +84,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.AddTask(r.Context(), task) //передаем контекст, полученный из запроса.
+	err = h.service.AddTask(r.Context(), task) // передаем контекст, полученный из запроса.
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return

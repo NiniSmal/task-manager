@@ -39,9 +39,16 @@ func (m *Middleware) Logging(next http.Handler) http.Handler {
 
 func (m *Middleware) ResponseHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
-		w.Header().Add("Access-Control-Allow-Methods", "*")
-		w.Header().Add("Access-Control-Allow-Headers", "*")
+		if r.Header.Get("Origin") != "" {
+			w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "localhost")
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Headers",
+			"GET, POST, PUT, PATCH, DELETE, Content-Type, Authorization, X-Request-With, X-CSRF-Token, Cookie, Credentials")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return

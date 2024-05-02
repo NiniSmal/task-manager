@@ -79,7 +79,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Expires:    time.Now().Add(time.Hour),
 		RawExpires: "",
 		MaxAge:     3600,
-		Secure:     false,
+		Secure:     true,
 		HttpOnly:   true,
 		SameSite:   http.SameSiteNoneMode,
 		Raw:        "",
