@@ -2,11 +2,12 @@ package api
 
 import (
 	"context"
-	"errors"
-	"github.com/google/uuid"
-	"gitlab.com/nina8884807/task-manager/entity"
+	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/google/uuid"
+	"gitlab.com/nina8884807/task-manager/entity"
 )
 
 type Middleware struct {
@@ -56,28 +57,24 @@ func (m *Middleware) AuthHandler(next http.Handler) http.Handler {
 
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
-			if errors.Is(err, http.ErrNoCookie) {
-				HandlerError(ctx, w, entity.ErrNotAuthenticated)
-				return
-			}
-			HandlerError(ctx, w, err)
+			HandlerError(ctx, w, fmt.Errorf("%w: %s", entity.ErrNotAuthenticated, err))
 			return
 		}
 
-		sessionID, err := uuid.Parse(cookie.Value) //записанное значение Cookie при создании клиента записываем в sessionID
+		sessionID, err := uuid.Parse(cookie.Value) // записанное значение Cookie при создании клиента записываем в sessionID
 		if err != nil {
 			HandlerError(ctx, w, err)
 			return
 		}
 
-		user, err := m.repo.GetSession(ctx, sessionID) //в таблице связи  возвращаем нужный userID
+		user, err := m.repo.GetSession(ctx, sessionID) // в таблице связи  возвращаем нужный userID
 		if err != nil {
 			HandlerError(ctx, w, err)
 			return
 		}
 
-		ctx = context.WithValue(ctx, "user", user) //вносим в context
-		r = r.WithContext(ctx)                     //перезаписываем запрос с новым контестом, в который сохранили userID
+		ctx = context.WithValue(ctx, "user", user) // вносим в context
+		r = r.WithContext(ctx)                     // перезаписываем запрос с новым контестом, в который сохранили userID
 		next.ServeHTTP(w, r)
 	})
 }

@@ -5,20 +5,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"gitlab.com/nina8884807/task-manager/entity"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
+	"gitlab.com/nina8884807/task-manager/entity"
 )
 
 type UserHandler struct {
 	service UserService
+	appHost string
 }
 
-func NewUserHandler(u UserService) *UserHandler {
+func NewUserHandler(u UserService, appHost string) *UserHandler {
 	return &UserHandler{
 		service: u,
+		appHost: appHost,
 	}
 }
 
@@ -72,7 +75,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Name:       "session_id",
 		Value:      sessionID.String(),
 		Path:       "/",
-		Domain:     "localhost",
+		Domain:     u.appHost,
 		Expires:    time.Now().Add(time.Hour),
 		RawExpires: "",
 		MaxAge:     3600,

@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/go-chi/chi/v5"
@@ -86,6 +87,11 @@ func main() {
 	}
 	defer kafkaWriter.Close()
 
+	appURL, err := url.Parse(cfg.AppURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	rp := repository.NewProjectRepository(db, rds)
 	sp := service.NewProjectService(rp)
 	hp := api.NewProjectHandler(sp)
@@ -94,7 +100,7 @@ func main() {
 	ht := api.NewTaskHandler(st)
 	ut := repository.NewUserRepository(db, rds)
 	su := service.NewUserService(ut, kafkaWriter, cfg.AppURL)
-	hu := api.NewUserHandler(su)
+	hu := api.NewUserHandler(su, appURL.Hostname())
 	// midll такой же обработчик, поэтому так же принимает репозиторий
 	mw := api.NewMiddleware(ut, logger)
 	router := chi.NewRouter()
