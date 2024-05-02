@@ -77,6 +77,20 @@ func main() {
 	if err != nil {
 		log.Fatal("dial kafka:", err)
 	}
+
+	connKafka.Close()
+
+	topicConfigs := []kafka.TopicConfig{
+		{Topic: cfg.KafkaTopicCreateUser,
+			NumPartitions:     1,
+			ReplicationFactor: 1,
+		},
+	}
+	err = connKafka.CreateTopics(topicConfigs...)
+	if err != nil {
+		logger.Error("create topic", err)
+	}
+
 	defer connKafka.Close()
 	kafkaWriter := &kafka.Writer{
 		Addr:                   kafka.TCP(cfg.KafkaAddr),
@@ -96,7 +110,7 @@ func main() {
 	sp := service.NewProjectService(rp)
 	hp := api.NewProjectHandler(sp)
 	rt := repository.NewTaskRepository(db, rds)
-	st := service.NewTaskService(rt, rp)
+	st := service.NewTaskService(rt, rp, kafkaWriter)
 	ht := api.NewTaskHandler(st)
 	ut := repository.NewUserRepository(db, rds)
 	su := service.NewUserService(ut, kafkaWriter, cfg.AppURL)

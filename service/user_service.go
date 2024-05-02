@@ -79,7 +79,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 
 	err = u.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
 	if err != nil {
-		return fmt.Errorf("failed to write messages: , %w", err)
+		return fmt.Errorf("failed to write messages: %w", err)
 	}
 
 	return nil

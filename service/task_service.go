@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/segmentio/kafka-go"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"time"
 )
@@ -11,12 +13,14 @@ import (
 type TaskService struct {
 	tasks    TaskRepository
 	projects ProjectRepository
+	kafka    *kafka.Writer
 }
 
-func NewTaskService(r TaskRepository, pr ProjectRepository) *TaskService {
+func NewTaskService(r TaskRepository, pr ProjectRepository, w *kafka.Writer) *TaskService {
 	return &TaskService{
 		tasks:    r,
 		projects: pr,
+		kafka:    w,
 	}
 }
 
@@ -52,6 +56,28 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 	err = s.tasks.Create(ctx, task)
 	if err != nil {
 		return fmt.Errorf("save task: %w", err)
+	}
+	//при создании задачи в проекте слать уведомление об этом всем участникам проекта
+	usersEmail, err := s.projects.ProjectUsers(ctx, task.ProjectID)
+	if err != nil {
+		return err
+	}
+	var emails []SendEmail
+	for _, userTo := range usersEmail {
+		email := SendEmail{
+			Text: fmt.Sprintf("New task created in project  %d", task.ProjectID),
+			To:   userTo.Email,
+		}
+		emails = append(emails, email)
+	}
+	msg, err := json.Marshal(&emails)
+	if err != nil {
+		return fmt.Errorf("failed to marshal message: , %w", err)
+	}
+
+	err = s.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
+	if err != nil {
+		return fmt.Errorf("failed to write messages %w", err)
 	}
 	return nil
 }
