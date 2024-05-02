@@ -14,7 +14,7 @@ func TestTask_Validate(t *testing.T) {
 	}{
 		{
 			name:      "ok",
-			task:      Task{Name: "learn go"},
+			task:      Task{Name: "learn go", ProjectID: 1},
 			wantError: false,
 		},
 		{
