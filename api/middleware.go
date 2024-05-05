@@ -44,9 +44,9 @@ func (m *Middleware) ResponseHeader(next http.Handler) http.Handler {
 		} else {
 			w.Header().Set("Access-Control-Allow-Origin", "localhost")
 		}
-		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers",
-			"GET, POST, PUT, PATCH, DELETE, Content-Type, Authorization, X-Request-With, X-CSRF-Token, Cookie, Credentials")
+			"Content-Type, Authorization, X-Request-With, X-CSRF-Token, Cookie, Credentials")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		if r.Method == http.MethodOptions {
