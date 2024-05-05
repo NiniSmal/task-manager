@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/segmentio/kafka-go"
-	"gitlab.com/nina8884807/task-manager/entity"
 	"log/slog"
 	"time"
+
+	"github.com/segmentio/kafka-go"
+	"gitlab.com/nina8884807/task-manager/entity"
 )
 
 type TaskService struct {
@@ -70,13 +71,13 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 }
 
 func (s *TaskService) sendCreateTaskNotification(ctx context.Context, projectID int64) error {
-	//при создании задачи в проекте слать уведомление об этом всем участникам проекта
+	// при создании задачи в проекте слать уведомление об этом всем участникам проекта
 	userEmails, err := s.projects.ProjectUsers(ctx, projectID)
 	if err != nil {
 		return err
 	}
 
-	user := ctx.Value("user_id").(entity.User)
+	user := ctx.Value("user").(entity.User)
 
 	for _, userTo := range userEmails {
 		if userTo.ID == user.ID {
