@@ -1,3 +1,7 @@
+# Show last tag
+v:
+	git describe --tags --abbrev=0
+
 up:
 	docker compose up -d
 

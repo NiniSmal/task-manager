@@ -76,7 +76,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Value: sessionID.String(),
 		Path:  "/",
 		// Domain:     u.appHost,
-		Expires:    time.Now().Add(time.Hour),
+		Expires:    time.Now().Add(time.Hour * 24 * 7),
 		RawExpires: "",
 		MaxAge:     3600,
 		Secure:     true,
