@@ -70,13 +70,13 @@ func (m *Middleware) AuthHandler(next http.Handler) http.Handler {
 
 		sessionID, err := uuid.Parse(cookie.Value) // записанное значение Cookie при создании клиента записываем в sessionID
 		if err != nil {
-			HandlerError(ctx, w, err)
+			HandlerError(ctx, w, fmt.Errorf("%w: %s", entity.ErrNotAuthenticated, err))
 			return
 		}
 
 		user, err := m.repo.GetSession(ctx, sessionID) // в таблице связи  возвращаем нужный userID
 		if err != nil {
-			HandlerError(ctx, w, err)
+			HandlerError(ctx, w, fmt.Errorf("%w: %s", entity.ErrNotAuthenticated, err))
 			return
 		}
 
