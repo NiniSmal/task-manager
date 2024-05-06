@@ -78,7 +78,7 @@ func main() {
 		log.Fatal("dial kafka:", err)
 	}
 
-	connKafka.Close()
+	defer connKafka.Close()
 
 	topicConfigs := []kafka.TopicConfig{
 		{Topic: cfg.KafkaTopicCreateUser,
@@ -91,7 +91,6 @@ func main() {
 		logger.Error("create topic", err)
 	}
 
-	defer connKafka.Close()
 	kafkaWriter := &kafka.Writer{
 		Addr:                   kafka.TCP(cfg.KafkaAddr),
 		Topic:                  cfg.KafkaTopicCreateUser,
@@ -135,6 +134,7 @@ func main() {
 		r.Post("/api/tasks", ht.CreateTask)
 		r.Get("/api/tasks/{id}", ht.GetTaskByID)
 		r.Put("/api/tasks/{id}", ht.UpdateTask)
+		r.Delete("/api/tasks/{id}", ht.Delete)
 	})
 
 	router.Post("/api/users", hu.CreateUser)

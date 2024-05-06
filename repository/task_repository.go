@@ -100,3 +100,12 @@ func (r *TaskRepository) Update(ctx context.Context, id int64, task entity.Updat
 	}
 	return nil
 }
+
+func (r *TaskRepository) Delete(ctx context.Context, id int64) error {
+	query := "DELETE FROM tasks WHERE id = $1"
+	_, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}

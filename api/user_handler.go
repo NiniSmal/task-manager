@@ -87,6 +87,9 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 }
+func (u *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
+
+}
 
 func (u *UserHandler) Verification(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

@@ -31,6 +31,7 @@ type TaskRepository interface {
 	ByID(ctx context.Context, id int64) (entity.Task, error)
 	Tasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error)
 	Update(ctx context.Context, id int64, task entity.UpdateTask) error
+	Delete(ctx context.Context, id int64) error
 }
 
 func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
@@ -159,6 +160,21 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 		err = s.tasks.Update(ctx, id, task)
 		if err != nil {
 			return fmt.Errorf("update task: %w", err)
+		}
+	}
+	return nil
+}
+
+func (s *TaskService) Delete(ctx context.Context, id int64) error {
+	user := ctx.Value("user").(entity.User)
+	taskOld, err := s.tasks.ByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("get task by id %d: %w", id, err)
+	}
+	if user.ID == taskOld.UserID {
+		err = s.tasks.Delete(ctx, id)
+		if err != nil {
+			return fmt.Errorf("delete task %d: %w", id, err)
 		}
 	}
 	return nil

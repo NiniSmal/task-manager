@@ -181,6 +181,23 @@ paths:
               schema:
                 type: string
                 example: ''
+    delete:
+      summary: Delete task
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ''
 
 
   /users:

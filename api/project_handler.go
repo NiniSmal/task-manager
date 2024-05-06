@@ -115,7 +115,6 @@ func (p *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 		HandlerError(ctx, w, err)
 		return
 	}
-
 	err = p.service.DeleteProject(ctx, int64(id))
 	if err != nil {
 		HandlerError(ctx, w, err)
