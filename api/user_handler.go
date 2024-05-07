@@ -61,7 +61,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := u.service.Login(r.Context(), user.Email, user.Password)
+	sessionID, err := u.service.Login(ctx, user.Email, user.Password)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
@@ -88,6 +88,16 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &cookie)
 }
 func (u *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	sessionID := uuid.UUID{}
+
+	cookie := http.Cookie{
+		Name:    "session_id",
+		Value:   sessionID.String(),
+		Path:    "/",
+		MaxAge:  -1,
+		Expires: time.Now().Add(-time.Hour),
+	}
+	http.SetCookie(w, &cookie)
 
 }
 

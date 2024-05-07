@@ -139,6 +139,7 @@ func main() {
 
 	router.Post("/api/users", hu.CreateUser)
 	router.Post("/api/login", hu.Login)
+	router.Post("/api/logout", hu.Logout)
 	router.Get("/api/verification", hu.Verification)
 
 	logger.Info(fmt.Sprintf("start http server at port: %v", cfg.Port))

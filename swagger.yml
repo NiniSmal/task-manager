@@ -257,6 +257,15 @@ paths:
               schema:
                 type: string
                 example: ''
+  /logout:
+    post:
+      summary: Logout
+      tags:
+        - auth
+      responses:
+        '200':
+          description: OK
+
 
   /verification:
     get:
