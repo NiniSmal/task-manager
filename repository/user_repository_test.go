@@ -149,6 +149,24 @@ func TestUserRepository_SaveSession(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, user, userS)
 }
+func TestUserRepository_SaveSessionFromCache(t *testing.T) {
+	db, rds := UserConnection(t)
+	ur := NewUserRepository(db, rds)
+	ctx := context.Background()
+	session := uuid.New()
+	user := entity.User{
+		ID:       int64(1),
+		Email:    uuid.New().String(),
+		Password: uuid.New().String(),
+		Role:     "user",
+	}
+	err := ur.saveSessionToCache(ctx, session, user)
+	require.NoError(t, err)
+
+	userS, err := ur.getSessionFromCache(ctx, session)
+	require.NoError(t, err)
+	require.Equal(t, user, userS)
+}
 
 func TestUserRepository_GetSession_Error(t *testing.T) {
 	db, rds := UserConnection(t)
@@ -156,5 +174,14 @@ func TestUserRepository_GetSession_Error(t *testing.T) {
 	ctx := context.Background()
 
 	_, err := ur.GetSession(ctx, uuid.New())
+	require.Error(t, err)
+}
+
+func TestUserRepository_GetSessionFromCache_Error(t *testing.T) {
+	db, rds := UserConnection(t)
+	ur := NewUserRepository(db, rds)
+	ctx := context.Background()
+
+	_, err := ur.getSessionFromCache(ctx, uuid.New())
 	require.Error(t, err)
 }
