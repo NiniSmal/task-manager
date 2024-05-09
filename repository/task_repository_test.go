@@ -93,22 +93,32 @@ func TestTaskRepository_Create(t *testing.T) {
 func TestTaskRepository_Tasks(t *testing.T) {
 	db, rds := TaskConnection(t)
 	tr := NewTaskRepository(db, rds)
+	ur := NewUserRepository(db, rds)
+	pr := NewProjectRepository(db, rds)
 	ctx := context.Background()
 
-	userID := int64(1)
+	user := entity.User{Email: uuid.NewString()}
+	userID, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+	user.ID = userID
+
+	project := entity.Project{UserID: userID}
+	projectID, err := pr.SaveProject(ctx, project)
+	require.NoError(t, err)
+	project.ID = projectID
 	tasks := []entity.Task{
 		{
 			Name:      uuid.New().String(),
 			Status:    "done",
 			CreatedAt: time.Now().Round(time.Millisecond).UTC(),
-			UserID:    userID,
-			ProjectID: 2,
+			UserID:    user.ID,
+			ProjectID: project.ID,
 		}, {
 			Name:      uuid.New().String(),
 			Status:    "done",
 			CreatedAt: time.Now().Round(time.Millisecond).UTC(),
-			UserID:    userID,
-			ProjectID: 2,
+			UserID:    user.ID,
+			ProjectID: project.ID,
 		},
 	}
 	for i, task := range tasks {
@@ -117,8 +127,8 @@ func TestTaskRepository_Tasks(t *testing.T) {
 		tasks[i].ID = id
 	}
 	filter := entity.TaskFilter{
-		UserID:    strconv.FormatInt(userID, 10),
-		ProjectID: "2",
+		UserID:    strconv.FormatInt(user.ID, 10),
+		ProjectID: strconv.FormatInt(project.ID, 10),
 	}
 	dbTasks, err := tr.Tasks(ctx, filter)
 	require.NoError(t, err)
@@ -140,21 +150,35 @@ func TestTaskRepository_ByID_Error(t *testing.T) {
 func TestTaskRepository_Update(t *testing.T) {
 	db, rds := TaskConnection(t)
 	tr := NewTaskRepository(db, rds)
+	ur := NewUserRepository(db, rds)
+	pr := NewProjectRepository(db, rds)
 	ctx := context.Background()
+
+	user := entity.User{Email: uuid.NewString()}
+	userID, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+	user.ID = userID
+
+	project := entity.Project{UserID: userID}
+	projectID, err := pr.SaveProject(ctx, project)
+	require.NoError(t, err)
+	project.ID = projectID
+	createdAt := time.Now()
 	task := entity.Task{
 		Name:      uuid.New().String(),
 		Status:    "not done",
-		CreatedAt: time.Now(),
-		UserID:    1,
-		ProjectID: 2,
+		CreatedAt: createdAt,
+		UserID:    user.ID,
+		ProjectID: project.ID,
 	}
 	id, err := tr.Create(ctx, task)
 	require.NoError(t, err)
 
 	taskUp := entity.UpdateTask{
-		Name:   task.Name,
-		Status: "done",
-		UserID: 1,
+		Name:      task.Name,
+		Status:    "done",
+		UserID:    user.ID,
+		ProjectID: projectID,
 	}
 
 	idDB, err := tr.Update(ctx, id, taskUp)
@@ -162,17 +186,31 @@ func TestTaskRepository_Update(t *testing.T) {
 
 	taskDB, err := tr.ByID(ctx, idDB)
 	require.NoError(t, err)
-	require.Equal(t, taskDB, taskUp)
+	require.Equal(t, taskUp.Name, taskDB.Name)
+	require.Equal(t, taskUp.Status, taskDB.Status)
 
 }
 func TestTaskRepository_Delete(t *testing.T) {
 	db, rds := TaskConnection(t)
 	tr := NewTaskRepository(db, rds)
+	ur := NewUserRepository(db, rds)
+	pr := NewProjectRepository(db, rds)
 	ctx := context.Background()
+
+	user := entity.User{Email: uuid.NewString()}
+	userID, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+	user.ID = userID
+
+	project := entity.Project{UserID: user.ID}
+	projectID, err := pr.SaveProject(ctx, project)
+	require.NoError(t, err)
+	project.ID = projectID
 
 	task := entity.Task{
 		Name:      uuid.New().String(),
-		ProjectID: 2,
+		ProjectID: project.ID,
+		UserID:    user.ID,
 	}
 
 	id, err := tr.Create(ctx, task)

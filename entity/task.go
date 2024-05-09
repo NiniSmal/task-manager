@@ -26,9 +26,10 @@ type Task struct {
 }
 
 type UpdateTask struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
-	UserID int64  `json:"user_id"`
+	Name      string `json:"name"`
+	Status    string `json:"status"`
+	UserID    int64  `json:"user_id"`
+	ProjectID int64  `json:"project_id"`
 }
 
 type TaskFilter struct {

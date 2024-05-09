@@ -45,7 +45,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
 	db, rds := UserConnection(t)
 	ur := NewUserRepository(db, rds)
 	user := entity.User{
-		Email:            "nina8884807@gmail.com",
+		Email:            uuid.NewString(),
 		Password:         "123",
 		CreatedAt:        time.Now(),
 		Role:             "user",
