@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/segmentio/kafka-go"
 	"log/slog"
 	"time"
 
-	"github.com/segmentio/kafka-go"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
 
@@ -27,10 +27,10 @@ func NewTaskService(r TaskRepository, pr ProjectRepository, w *kafka.Writer) *Ta
 }
 
 type TaskRepository interface {
-	Create(ctx context.Context, task entity.Task) error
+	Create(ctx context.Context, task entity.Task) (int64, error)
 	ByID(ctx context.Context, id int64) (entity.Task, error)
 	Tasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error)
-	Update(ctx context.Context, id int64, task entity.UpdateTask) error
+	Update(ctx context.Context, id int64, task entity.UpdateTask) (int64, error)
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -56,7 +56,7 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 	task.CreatedAt = time.Now()
 	task.UserID = user.ID
 
-	err = s.tasks.Create(ctx, task)
+	_, err = s.tasks.Create(ctx, task)
 	if err != nil {
 		return fmt.Errorf("save task: %w", err)
 	}
@@ -151,7 +151,7 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 	}
 
 	if user.Role == entity.RoleAdmin {
-		err = s.tasks.Update(ctx, id, task)
+		_, err = s.tasks.Update(ctx, id, task)
 		if err != nil {
 			return fmt.Errorf("update task: %w", err)
 		}

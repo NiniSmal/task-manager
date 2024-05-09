@@ -27,10 +27,10 @@ func NewUserService(r UserRepository, w *kafka.Writer, appURL string) *UserServi
 }
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, user entity.User) error
+	CreateUser(ctx context.Context, user entity.User) (int64, error)
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
 	UserByLogin(ctx context.Context, login string) (entity.User, error)
-	Verification(ctx context.Context, verificationCode string, verification bool) error
+	Verification(ctx context.Context, verificationCode string, verification bool) (int64, error)
 }
 
 type SendEmail struct {
@@ -62,7 +62,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		return fmt.Errorf("get user by login: %w", err)
 	}
 
-	err = u.repo.CreateUser(ctx, user)
+	_, err = u.repo.CreateUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
 	}
@@ -107,7 +107,7 @@ func (u *UserService) Login(ctx context.Context, login, password string) (uuid.U
 }
 
 func (u *UserService) Verification(ctx context.Context, verificationCode string, verification bool) error {
-	err := u.repo.Verification(ctx, verificationCode, verification)
+	_, err := u.repo.Verification(ctx, verificationCode, verification)
 	if err != nil {
 		return fmt.Errorf("%w, follow the link in the email to verify", entity.ErrNotVerification)
 	}

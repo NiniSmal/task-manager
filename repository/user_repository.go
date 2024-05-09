@@ -23,14 +23,26 @@ func NewUserRepository(db *sql.DB, rds *redis.Client) *UserRepository {
 	}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user entity.User) error {
-	query := "INSERT INTO users ( email, password, created_at, role, verification, verification_code ) VALUES ($1, $2, $3, $4, $5, $6)"
+func (r *UserRepository) CreateUser(ctx context.Context, user entity.User) (int64, error) {
+	query := "INSERT INTO users ( email, password, created_at, role, verification, verification_code ) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
 
-	_, err := r.db.ExecContext(ctx, query, user.Email, user.Password, user.CreatedAt, user.Role, user.Verification, user.VerificationCode)
+	var id int64
+
+	err := r.db.QueryRowContext(ctx, query, user.Email, user.Password, user.CreatedAt, user.Role, user.Verification, user.VerificationCode).Scan(&id)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return id, nil
+}
+
+func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (entity.User, error) {
+	query := "SELECT email, password, created_at, role, verification, verification_code FROM users WHERE id = $1"
+	var user entity.User
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&user.Email, &user.Password, &user.CreatedAt, &user.Role, &user.Verification, &user.VerificationCode)
+	if err != nil {
+		return entity.User{}, err
+	}
+	return user, nil
 }
 
 func (r *UserRepository) SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error {
@@ -75,13 +87,14 @@ func (r *UserRepository) UserByLogin(ctx context.Context, email string) (entity.
 	return user, nil
 }
 
-func (r *UserRepository) Verification(ctx context.Context, verificationCode string, verification bool) error {
-	query := "UPDATE users SET verification = $1 WHERE verification_code = $2 "
-	_, err := r.db.ExecContext(ctx, query, verification, verificationCode)
+func (r *UserRepository) Verification(ctx context.Context, verificationCode string, verification bool) (int64, error) {
+	query := "UPDATE users SET verification = $1 WHERE verification_code = $2 RETURNING id"
+	var id int64
+	err := r.db.QueryRowContext(ctx, query, verification, verificationCode).Scan(&id)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return id, nil
 }
 
 func (r *UserRepository) GetSession(ctx context.Context, sessionID uuid.UUID) (entity.User, error) {

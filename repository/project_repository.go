@@ -86,10 +86,10 @@ func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectF
 	return projects, nil
 }
 
-func (p *ProjectRepository) UpdateProject(ctx context.Context, id int64, project entity.Project) error {
+func (p *ProjectRepository) UpdateProject(ctx context.Context, projectID int64, project entity.Project) error {
 	query := "UPDATE projects SET name = $1, updated_at = $2 WHERE id = $3"
 
-	_, err := p.db.ExecContext(ctx, query, project.Name, project.UpdatedAt, id)
+	_, err := p.db.ExecContext(ctx, query, project.Name, project.UpdatedAt, projectID)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (p *ProjectRepository) AddProjectMembersByID(ctx context.Context, userID in
 }
 
 func (p *ProjectRepository) addProjectMembersByID(ctx context.Context, userID int64, projectID int64, tx *sql.Tx) error {
-	query := "INSERT INTO user_projects (user_id, project_id) VALUES ($1, $2) ON CONFLICT (user_id, project_id) DO NOTHING"
+	query := "INSERT INTO user_projects (user_id, project_id) VALUES ($1, $2) ON CONFLICT (user_id, project_id) DO NOTHING "
 
 	_, err := tx.ExecContext(ctx, query, userID, projectID)
 	if err != nil {

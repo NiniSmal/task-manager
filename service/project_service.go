@@ -103,12 +103,12 @@ func (p *ProjectService) AddProjectMembers(ctx context.Context, projectID int64,
 	return nil
 }
 
-func (p *ProjectService) UpdateProject(ctx context.Context, id int64, project entity.Project) error {
+func (p *ProjectService) UpdateProject(ctx context.Context, projectID int64, project entity.Project) error {
 	user := ctx.Value("user").(entity.User)
 
-	projectOld, err := p.repo.ProjectByID(ctx, id)
+	projectOld, err := p.repo.ProjectByID(ctx, projectID)
 	if err != nil {
-		return fmt.Errorf("get project by id: %w", err)
+		return fmt.Errorf("get project by projectID: %w", err)
 	}
 
 	project.UpdatedAt = time.Now()
@@ -116,7 +116,8 @@ func (p *ProjectService) UpdateProject(ctx context.Context, id int64, project en
 	if user.Role != entity.RoleAdmin && user.ID != projectOld.UserID {
 		return fmt.Errorf("update project: %w", entity.ErrForbidden)
 	}
-	err = p.repo.UpdateProject(ctx, id, project)
+
+	err = p.repo.UpdateProject(ctx, projectID, project)
 	if err != nil {
 		return fmt.Errorf("update project: %w", err)
 	}

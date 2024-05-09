@@ -19,19 +19,20 @@ func NewTaskRepository(db *sql.DB, rds *redis.Client) *TaskRepository {
 		rds: rds,
 	}
 }
-func (r *TaskRepository) Create(ctx context.Context, task entity.Task) error {
-	query := "INSERT INTO tasks (name, status, created_at, user_id, project_id) VALUES ($1, $2, $3, $4, $5) "
+func (r *TaskRepository) Create(ctx context.Context, task entity.Task) (int64, error) {
+	query := "INSERT INTO tasks (name, status, created_at, user_id, project_id) VALUES ($1, $2, $3, $4, $5) RETURNING id"
 
-	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, task.CreatedAt, task.UserID, task.ProjectID)
+	var id int64
+	err := r.db.QueryRowContext(ctx, query, task.Name, task.Status, task.CreatedAt, task.UserID, task.ProjectID).Scan(&id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }
 
 func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error) {
-	query := "SELECT id, name, status, created_at, user_id, project_id FROM tasks WHERE id=$1"
+	query := "SELECT id, name, status, created_at, user_id, project_id FROM tasks WHERE id = $1"
 
 	var task entity.Task
 
@@ -47,7 +48,7 @@ func (r *TaskRepository) Tasks(ctx context.Context, f entity.TaskFilter) ([]enti
 	query := "SELECT id, name, status, created_at, project_id, user_id FROM tasks"
 
 	query, args := applyTaskFilter(query, f)
-
+	query += " ORDER BY created_at DESC"
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -91,14 +92,16 @@ func applyTaskFilter(query string, f entity.TaskFilter) (string, []any) {
 	return query, args
 }
 
-func (r *TaskRepository) Update(ctx context.Context, id int64, task entity.UpdateTask) error {
-	query := "UPDATE tasks SET name = $1, status = $2 WHERE id = $3"
+func (r *TaskRepository) Update(ctx context.Context, id int64, task entity.UpdateTask) (int64, error) {
+	query := "UPDATE tasks SET name = $1, status = $2 WHERE id = $3 RETURNING id"
 
-	_, err := r.db.ExecContext(ctx, query, task.Name, task.Status, id)
+	var idT int64
+
+	err := r.db.QueryRowContext(ctx, query, task.Name, task.Status, id).Scan(&idT)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return idT, nil
 }
 
 func (r *TaskRepository) Delete(ctx context.Context, id int64) error {
