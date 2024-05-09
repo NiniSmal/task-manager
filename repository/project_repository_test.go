@@ -128,3 +128,42 @@ func TestProjectRepository_AddProjectMembersByID(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, users, user)
 }
+
+func TestProjectRepository_UserProjects(t *testing.T) {
+	db, rds := ProjectConnection(t)
+	pr := NewProjectRepository(db, rds)
+	ur := NewUserRepository(db, rds)
+	ctx := context.Background()
+
+	user := entity.User{Email: uuid.NewString()}
+	userID, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+	user.ID = userID
+	createdAt := time.Now().Round(time.Millisecond).UTC()
+	projects := []entity.Project{
+		{
+			Name:      uuid.New().String(),
+			CreatedAt: createdAt,
+			UpdatedAt: createdAt,
+			UserID:    user.ID,
+		}, {
+			Name:      uuid.New().String(),
+			CreatedAt: createdAt,
+			UpdatedAt: createdAt,
+			UserID:    user.ID,
+		},
+	}
+	for i, project := range projects {
+		projectID, err := pr.SaveProject(ctx, project)
+		require.NoError(t, err)
+		projects[i].ID = projectID
+	}
+	filter := entity.ProjectFilter{UserID: user.ID}
+	projectsDB, err := pr.UserProjects(ctx, filter)
+	require.NoError(t, err)
+
+	for _, project := range projects {
+		require.Contains(t, projectsDB, project)
+	}
+
+}
