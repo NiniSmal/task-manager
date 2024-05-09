@@ -57,14 +57,26 @@ func TaskConnection(t *testing.T) (*sql.DB, *redis.Client) {
 func TestTaskRepository_Create(t *testing.T) {
 	db, rds := TaskConnection(t)
 	tr := NewTaskRepository(db, rds)
+	ur := NewUserRepository(db, rds)
+	pr := NewProjectRepository(db, rds)
 	ctx := context.Background()
+	createdAt := time.Now()
+	user := entity.User{Email: uuid.NewString()}
+	userID, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+	user.ID = userID
+
+	project := entity.Project{UserID: user.ID}
+	projectID, err := pr.SaveProject(ctx, project)
+	require.NoError(t, err)
+	project.ID = projectID
 
 	task := entity.Task{
 		Name:      uuid.New().String(),
 		Status:    "not done",
-		CreatedAt: time.Now(),
-		UserID:    1,
-		ProjectID: 2,
+		CreatedAt: createdAt,
+		UserID:    user.ID,
+		ProjectID: project.ID,
 	}
 	taskID, err := tr.Create(ctx, task)
 	require.NoError(t, err)
