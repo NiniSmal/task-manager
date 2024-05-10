@@ -88,14 +88,19 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &cookie)
 }
 func (u *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	sessionID := uuid.UUID{}
-
 	cookie := http.Cookie{
-		Name:    "session_id",
-		Value:   sessionID.String(),
-		Path:    "/",
-		MaxAge:  -1,
-		Expires: time.Now().Add(-time.Hour),
+		Name:  "session_id",
+		Value: "-",
+		Path:  "/",
+		// Domain:     u.appHost,
+		Expires:    time.Now().Add(-time.Hour),
+		RawExpires: "",
+		MaxAge:     -1,
+		Secure:     true,
+		HttpOnly:   true,
+		SameSite:   http.SameSiteNoneMode,
+		Raw:        "",
+		Unparsed:   nil,
 	}
 	http.SetCookie(w, &cookie)
 
