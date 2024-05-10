@@ -30,7 +30,7 @@ type TaskRepository interface {
 	Create(ctx context.Context, task entity.Task) (int64, error)
 	ByID(ctx context.Context, id int64) (entity.Task, error)
 	Tasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error)
-	Update(ctx context.Context, id int64, task entity.UpdateTask) (int64, error)
+	Update(ctx context.Context, id int64, task entity.UpdateTask) error
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -151,7 +151,7 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 	}
 
 	if user.Role == entity.RoleAdmin {
-		_, err = s.tasks.Update(ctx, id, task)
+		err = s.tasks.Update(ctx, id, task)
 		if err != nil {
 			return fmt.Errorf("update task: %w", err)
 		}

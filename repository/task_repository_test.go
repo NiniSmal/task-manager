@@ -181,10 +181,10 @@ func TestTaskRepository_Update(t *testing.T) {
 		ProjectID: projectID,
 	}
 
-	idDB, err := tr.Update(ctx, id, taskUp)
+	err = tr.Update(ctx, id, taskUp)
 	require.NoError(t, err)
 
-	taskDB, err := tr.ByID(ctx, idDB)
+	taskDB, err := tr.ByID(ctx, id)
 	require.NoError(t, err)
 	require.Equal(t, taskUp.Name, taskDB.Name)
 	require.Equal(t, taskUp.Status, taskDB.Status)

@@ -41,15 +41,21 @@ func ProjectConnection(t *testing.T) (*sql.DB, *redis.Client) {
 func TestProjectRepository_SaveProject(t *testing.T) {
 	db, rds := ProjectConnection(t)
 	pr := NewProjectRepository(db, rds)
+	ur := NewUserRepository(db, rds)
+
 	ctx := context.Background()
 
+	user := entity.User{Email: uuid.NewString()}
+	userID, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+	user.ID = userID
 	createdAt := time.Now()
 	updatedAt := createdAt
 	project := entity.Project{
 		Name:      uuid.New().String(),
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
-		UserID:    1,
+		UserID:    user.ID,
 		Members:   nil,
 	}
 
@@ -77,15 +83,21 @@ func TestProjectRepository_ByID_Error(t *testing.T) {
 func TestProjectRepository_UpdateProject(t *testing.T) {
 	db, rds := ProjectConnection(t)
 	pr := NewProjectRepository(db, rds)
+	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
-	userID := int64(1)
+
+	user := entity.User{Email: uuid.NewString()}
+	userID, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+	user.ID = userID
+
 	createdAt := time.Now()
 	updatedAt := createdAt
 	project := entity.Project{
 		Name:      uuid.New().String(),
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
-		UserID:    userID,
+		UserID:    user.ID,
 	}
 
 	idPr, err := pr.SaveProject(ctx, project)
@@ -95,6 +107,7 @@ func TestProjectRepository_UpdateProject(t *testing.T) {
 		ID:        idPr,
 		Name:      uuid.New().String(),
 		UpdatedAt: time.Now(),
+		UserID:    user.ID,
 	}
 	err = pr.UpdateProject(ctx, idPr, project2)
 	require.NoError(t, err)
