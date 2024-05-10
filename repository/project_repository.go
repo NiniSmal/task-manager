@@ -59,8 +59,11 @@ func (p *ProjectRepository) ProjectByID(ctx context.Context, id int64) (entity.P
 	return project, nil
 }
 
-func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectFilter) (projects []entity.Project, err error) {
+func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error) {
 	query := "SELECT id, name, created_at, updated_at, user_id FROM projects"
+
+	var projects []entity.Project
+
 	if filter.UserID != 0 {
 		query += fmt.Sprintf(" WHERE user_id = %d", filter.UserID)
 	}

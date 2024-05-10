@@ -72,11 +72,12 @@ func TestTaskRepository_Create(t *testing.T) {
 	project.ID = projectID
 
 	task := entity.Task{
-		Name:      uuid.New().String(),
-		Status:    "not done",
-		CreatedAt: createdAt,
-		UserID:    user.ID,
-		ProjectID: project.ID,
+		Name:        uuid.NewString(),
+		Description: uuid.NewString(),
+		Status:      "not done",
+		CreatedAt:   createdAt,
+		UserID:      user.ID,
+		ProjectID:   project.ID,
 	}
 	taskID, err := tr.Create(ctx, task)
 	require.NoError(t, err)
@@ -84,6 +85,7 @@ func TestTaskRepository_Create(t *testing.T) {
 	dbTask, err := tr.ByID(ctx, taskID)
 	require.NoError(t, err)
 	require.Equal(t, dbTask.Name, task.Name)
+	require.Equal(t, dbTask.Description, task.Description)
 	require.Equal(t, dbTask.Status, task.Status)
 	require.Equal(t, dbTask.CreatedAt.Unix(), dbTask.CreatedAt.Unix())
 	require.Equal(t, dbTask.UserID, dbTask.UserID)
@@ -165,20 +167,22 @@ func TestTaskRepository_Update(t *testing.T) {
 	project.ID = projectID
 	createdAt := time.Now()
 	task := entity.Task{
-		Name:      uuid.New().String(),
-		Status:    "not done",
-		CreatedAt: createdAt,
-		UserID:    user.ID,
-		ProjectID: project.ID,
+		Name:        uuid.New().String(),
+		Description: uuid.NewString(),
+		Status:      "not done",
+		CreatedAt:   createdAt,
+		UserID:      user.ID,
+		ProjectID:   project.ID,
 	}
 	id, err := tr.Create(ctx, task)
 	require.NoError(t, err)
 
 	taskUp := entity.UpdateTask{
-		Name:      task.Name,
-		Status:    "done",
-		UserID:    user.ID,
-		ProjectID: projectID,
+		Name:        task.Name,
+		Description: task.Description,
+		Status:      "done",
+		UserID:      user.ID,
+		ProjectID:   projectID,
 	}
 
 	err = tr.Update(ctx, id, taskUp)
@@ -187,6 +191,7 @@ func TestTaskRepository_Update(t *testing.T) {
 	taskDB, err := tr.ByID(ctx, id)
 	require.NoError(t, err)
 	require.Equal(t, taskUp.Name, taskDB.Name)
+	require.Equal(t, taskUp.Description, taskDB.Description)
 	require.Equal(t, taskUp.Status, taskDB.Status)
 
 }

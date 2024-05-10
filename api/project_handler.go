@@ -77,6 +77,10 @@ func (p *ProjectHandler) Projects(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(projects) == 0 {
+		projects = make([]entity.Project, 0)
+	}
+
 	err = sendJSON(w, projects)
 	if err != nil {
 		HandlerError(ctx, w, err)
@@ -153,6 +157,10 @@ func (p *ProjectHandler) UserProjects(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
+	}
+
+	if len(projects) == 0 {
+		projects = make([]entity.Project, 0)
 	}
 
 	err = sendJSON(w, projects)

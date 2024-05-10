@@ -127,6 +127,9 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		HandlerError(ctx, w, err)
 		return
 	}
+	if len(tasks) == 0 {
+		tasks = make([]entity.Task, 0)
+	}
 	err = sendJSON(w, tasks)
 	if err != nil {
 		HandlerError(ctx, w, err)
