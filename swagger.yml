@@ -22,13 +22,11 @@ paths:
           schema:
             type: string
             example: '13'
-          required: true
         - name: project_id
           in: query
           schema:
             type: string
             example: '130'
-          required: true
       responses:
         200:
           description: OK
