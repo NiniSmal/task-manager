@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
@@ -116,6 +117,7 @@ func main() {
 	hu := api.NewUserHandler(su, appURL.Hostname())
 	// midll такой же обработчик, поэтому так же принимает репозиторий
 	mw := api.NewMiddleware(ut, logger)
+
 	router := chi.NewRouter()
 
 	router.Use(mw.Logging, mw.ResponseHeader)
@@ -141,6 +143,14 @@ func main() {
 	router.Post("/api/login", hu.Login)
 	router.Post("/api/logout", hu.Logout)
 	router.Get("/api/verification", hu.Verification)
+
+	go func() {
+		err = su.SendVIPStatus(ctx, cfg.IntervalTime)
+		if err != nil {
+			logger.Error("send VIP Status", err)
+		}
+		time.Sleep(time.Millisecond * 60)
+	}()
 
 	logger.Info(fmt.Sprintf("start http server at port: %v", cfg.Port))
 

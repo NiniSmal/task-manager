@@ -86,8 +86,9 @@ func (s *TaskService) sendCreateTaskNotification(ctx context.Context, projectID 
 		}
 
 		email := SendEmail{
-			Text: fmt.Sprintf("New task created in project  %d", projectID),
-			To:   userTo.Email,
+			Text:    fmt.Sprintf("New task created in project  %d", projectID),
+			To:      userTo.Email,
+			Subject: "New task",
 		}
 
 		msg, err := json.Marshal(&email)

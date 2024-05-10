@@ -128,3 +128,25 @@ func (r *UserRepository) getSessionFromCache(ctx context.Context, sessionID uuid
 	}
 	return user, nil
 }
+
+func (r *UserRepository) Users(ctx context.Context, intervalTime string) ([]entity.User, error) {
+	query := "SELECT id, email, created_at, role, verification, verification_code FROM users WHERE (created_at +interval '1 day') < Now()"
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []entity.User
+	for rows.Next() {
+		var user entity.User
+
+		err = rows.Scan(&user.ID, &user.Email, &user.CreatedAt, &user.Role, &user.Verification, &user.VerificationCode)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+	return users, nil
+}

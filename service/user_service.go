@@ -31,11 +31,13 @@ type UserRepository interface {
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
 	UserByLogin(ctx context.Context, login string) (entity.User, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) (int64, error)
+	Users(ctx context.Context, intervalTime string) ([]entity.User, error)
 }
 
 type SendEmail struct {
-	Text string `json:"text"`
-	To   string `json:"to"`
+	Text    string `json:"text"`
+	To      string `json:"to"`
+	Subject string `json:"subject"`
 }
 
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
@@ -68,8 +70,9 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 	}
 
 	email := SendEmail{
-		Text: u.appURL + "/verification?code=" + user.VerificationCode,
-		To:   user.Email,
+		Text:    u.appURL + "/verification?code=" + user.VerificationCode,
+		To:      user.Email,
+		Subject: "Account verification",
 	}
 
 	msg, err := json.Marshal(&email)
@@ -110,6 +113,30 @@ func (u *UserService) Verification(ctx context.Context, verificationCode string,
 	_, err := u.repo.Verification(ctx, verificationCode, verification)
 	if err != nil {
 		return fmt.Errorf("%w, follow the link in the email to verify", entity.ErrNotVerification)
+	}
+	return nil
+}
+
+func (u *UserService) SendVIPStatus(ctx context.Context, intervalTime string) error {
+	users, err := u.repo.Users(ctx, intervalTime)
+	if err != nil {
+		return fmt.Errorf("get users for VIP status: %w", err)
+	}
+	for _, user := range users {
+		email := SendEmail{
+			Text:    "You have been assigned VIP status",
+			To:      user.Email,
+			Subject: "VIP Status",
+		}
+		msg2, err := json.Marshal(&email)
+		if err != nil {
+			return fmt.Errorf("failed to marshal message: ,%w", err)
+		}
+
+		err = u.kafka.WriteMessages(ctx, kafka.Message{Value: msg2})
+		if err != nil {
+			return fmt.Errorf("failed to write messages: %w", err)
+		}
 	}
 	return nil
 }

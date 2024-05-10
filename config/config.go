@@ -15,6 +15,7 @@ type Config struct {
 	MailServiceAddr      string `env:"MAIL_SERVICE_ADDR"`
 	AppURL               string `env:"APP_URL"`
 	LogJson              bool   `env:"LOG_JSON"`
+	IntervalTime         string `env:"INTERVAL_TIME"`
 }
 
 func GetConfig() (*Config, error) {
