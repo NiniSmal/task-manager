@@ -32,7 +32,7 @@ func (r *TaskRepository) Create(ctx context.Context, task entity.Task) (int64, e
 }
 
 func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error) {
-	query := "SELECT id, name,description, status, created_at, user_id, project_id FROM tasks WHERE id = $1"
+	query := "SELECT id, name, description, status, created_at, user_id, project_id FROM tasks WHERE id = $1"
 
 	var task entity.Task
 
