@@ -33,7 +33,7 @@ func (p *ProjectRepository) SaveProject(ctx context.Context, project entity.Proj
 		return 0, err
 	}
 
-	err = p.addProjectMembersByID(ctx, project.UserID, project.ID, tx)
+	err = p.addProjectMembersByID(ctx, tx, project.UserID, project.ID)
 	if err != nil {
 		return 0, err
 	}
@@ -110,14 +110,21 @@ func (p *ProjectRepository) DeleteProject(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (p *ProjectRepository) AddProjectMembersByID(ctx context.Context, userID int64, projectID int64) error {
+func (p *ProjectRepository) AddProjectMembers(ctx context.Context, code string) error {
 	tx, err := p.db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+	var userID, projectID int64
 
-	err = p.addProjectMembersByID(ctx, userID, projectID, tx)
+	query := "SELECT user_id, project_id FROM codes_projects_users WHERE code = $1"
+	err = tx.QueryRowContext(ctx, query, code).Scan(&userID, &projectID)
+	if err != nil {
+		return err
+	}
+
+	err = p.addProjectMembersByID(ctx, tx, userID, projectID)
 	if err != nil {
 		return err
 	}
@@ -129,8 +136,8 @@ func (p *ProjectRepository) AddProjectMembersByID(ctx context.Context, userID in
 	return nil
 }
 
-func (p *ProjectRepository) addProjectMembersByID(ctx context.Context, userID int64, projectID int64, tx *sql.Tx) error {
-	query := "INSERT INTO user_projects (user_id, project_id) VALUES ($1, $2) ON CONFLICT (user_id, project_id) DO NOTHING "
+func (p *ProjectRepository) addProjectMembersByID(ctx context.Context, tx *sql.Tx, userID int64, projectID int64) error {
+	query := "INSERT INTO user_projects (user_id, project_id) VALUES ($1, $2) ON CONFLICT (user_id, project_id) DO NOTHING"
 
 	_, err := tx.ExecContext(ctx, query, userID, projectID)
 	if err != nil {
@@ -189,4 +196,25 @@ func (p *ProjectRepository) ProjectUsers(ctx context.Context, projectID int64) (
 	}
 
 	return users, nil
+}
+
+func (p *ProjectRepository) JoiningUsers(ctx context.Context, projectID int64, userID int64, code string) error {
+	query := "INSERT INTO codes_projects_users (code, project_id, user_id) VALUES($1, $2, $3)"
+
+	_, err := p.db.ExecContext(ctx, query, code, projectID, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *ProjectRepository) GetCodeProjectUser(ctx context.Context, projectID int64, userEmail string) (string, error) {
+	query := "SELECT code FROM codes_projects_users WHERE projects_id = $1 AND user_email = $2"
+
+	var code string
+	err := p.db.QueryRowContext(ctx, query, projectID, userEmail).Scan(&code)
+	if err != nil {
+		return "", err
+	}
+	return code, nil
 }

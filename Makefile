@@ -19,3 +19,6 @@ run-tests:
 	goose -dir migrations postgres "postgres://postgres:dev@localhost:9000/postgres?sslmode=disable"  up
 	go test ./...
 
+reset-migrations:
+	goose -dir migrations postgres "postgres://postgres:dev@localhost:8014/postgres?sslmode=disable"  reset
+	goose -dir migrations postgres "postgres://postgres:dev@localhost:8014/postgres?sslmode=disable"  up

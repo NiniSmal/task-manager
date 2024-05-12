@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/go-chi/chi/v5"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"net/http"
@@ -25,8 +26,9 @@ type ProjectService interface {
 	Projects(ctx context.Context) ([]entity.Project, error)
 	UpdateProject(ctx context.Context, id int64, project entity.Project) error
 	DeleteProject(ctx context.Context, id int64) error
-	AddProjectMembers(ctx context.Context, projectID int64, userID int64) error
+	AddProjectMembers(ctx context.Context, code string) error
 	UserProjects(ctx context.Context) ([]entity.Project, error)
+	JoiningUsers(ctx context.Context, projectID int64, userEmail string) error
 }
 
 func (p *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
@@ -127,22 +129,20 @@ func (p *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 }
 
 type AddProjectMemberRequest struct {
-	ProjectID int64 `json:"project_id"`
-	UserID    int64 `json:"user_id"`
+	ProjectID int64  `json:"project_id"`
+	UserEmail string `json:"user_email"`
 }
 
 func (p *ProjectHandler) AddProjectMember(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var data AddProjectMemberRequest
-
-	err := json.NewDecoder(r.Body).Decode(&data)
-	if err != nil {
-		HandlerError(ctx, w, err)
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		HandlerError(ctx, w, errors.New("code is empty"))
 		return
 	}
 
-	err = p.service.AddProjectMembers(ctx, data.ProjectID, data.UserID)
+	err := p.service.AddProjectMembers(ctx, code)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
@@ -167,6 +167,22 @@ func (p *ProjectHandler) UserProjects(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
+	}
+}
+
+func (p *ProjectHandler) JoiningUsers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var data AddProjectMemberRequest
+
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+	err = p.service.JoiningUsers(ctx, data.ProjectID, data.UserEmail)
+	if err != nil {
+		HandlerError(ctx, w, err)
 	}
 
 }

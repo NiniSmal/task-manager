@@ -91,7 +91,7 @@ func TestUserRepository_UserByLogin(t *testing.T) {
 	id, err := ur.CreateUser(ctx, user)
 	require.NoError(t, err)
 
-	dbUser, err := ur.UserByLogin(ctx, user.Email)
+	dbUser, err := ur.UserByEmail(ctx, user.Email)
 	require.NoError(t, err)
 	require.Equal(t, id, dbUser.ID)
 }

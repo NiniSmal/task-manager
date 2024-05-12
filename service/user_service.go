@@ -29,7 +29,7 @@ func NewUserService(r UserRepository, w *kafka.Writer, appURL string) *UserServi
 type UserRepository interface {
 	CreateUser(ctx context.Context, user entity.User) (int64, error)
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
-	UserByLogin(ctx context.Context, login string) (entity.User, error)
+	UserByEmail(ctx context.Context, login string) (entity.User, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) (int64, error)
 	Users(ctx context.Context, intervalTime string) ([]entity.User, error)
 }
@@ -55,7 +55,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		return err
 	}
 
-	_, err = u.repo.UserByLogin(ctx, login)
+	_, err = u.repo.UserByEmail(ctx, login)
 	if err == nil {
 		return entity.ErrEmailExists
 	}
@@ -89,7 +89,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 }
 
 func (u *UserService) Login(ctx context.Context, login, password string) (uuid.UUID, error) {
-	user, err := u.repo.UserByLogin(ctx, login)
+	user, err := u.repo.UserByEmail(ctx, login)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("get user by login: %w", err)
 	}

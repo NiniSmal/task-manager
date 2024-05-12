@@ -106,14 +106,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ut := repository.NewUserRepository(db, rds)
+	su := service.NewUserService(ut, kafkaWriter, cfg.AppURL)
 	rp := repository.NewProjectRepository(db, rds)
-	sp := service.NewProjectService(rp)
+	sp := service.NewProjectService(rp, kafkaWriter, cfg.AppURL, ut)
 	hp := api.NewProjectHandler(sp)
 	rt := repository.NewTaskRepository(db, rds)
 	st := service.NewTaskService(rt, rp, kafkaWriter)
 	ht := api.NewTaskHandler(st)
-	ut := repository.NewUserRepository(db, rds)
-	su := service.NewUserService(ut, kafkaWriter, cfg.AppURL)
+
 	hu := api.NewUserHandler(su, appURL.Hostname())
 	// midll такой же обработчик, поэтому так же принимает репозиторий
 	mw := api.NewMiddleware(ut, logger)
@@ -129,8 +130,8 @@ func main() {
 		r.Get("/api/projects/{id}", hp.ProjectByID)
 		r.Put("/api/projects/{id}", hp.UpdateProject)
 		r.Delete("/api/projects/{id}", hp.DeleteProject)
-		r.Post("/api/projects/users", hp.AddProjectMember)
 		r.Get("/api/users/projects", hp.UserProjects)
+		r.Post("/api/projects/joining", hp.JoiningUsers)
 
 		r.Get("/api/tasks", ht.GetAllTasks)
 		r.Post("/api/tasks", ht.CreateTask)
@@ -143,6 +144,7 @@ func main() {
 	router.Post("/api/login", hu.Login)
 	router.Post("/api/logout", hu.Logout)
 	router.Get("/api/verification", hu.Verification)
+	router.Get("/api/projects/joining", hp.AddProjectMember)
 
 	go func() {
 		err = su.SendVIPStatus(ctx, cfg.IntervalTime)

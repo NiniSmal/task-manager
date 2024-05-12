@@ -72,7 +72,7 @@ func (r *UserRepository) saveSessionToCache(ctx context.Context, sessionID uuid.
 	return nil
 }
 
-func (r *UserRepository) UserByLogin(ctx context.Context, email string) (entity.User, error) {
+func (r *UserRepository) UserByEmail(ctx context.Context, email string) (entity.User, error) {
 	query := "SELECT id, email, password, created_at, role, verification, verification_code FROM users WHERE email = $1"
 
 	var user entity.User

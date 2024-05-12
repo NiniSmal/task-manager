@@ -2,29 +2,41 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/segmentio/kafka-go"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"time"
 )
 
 type ProjectService struct {
-	repo ProjectRepository
+	repo   ProjectRepository
+	kafka  *kafka.Writer
+	appURL string
+	user   UserRepository
 }
 
-func NewProjectService(r ProjectRepository) *ProjectService {
+func NewProjectService(r ProjectRepository, w *kafka.Writer, appURL string, user UserRepository) *ProjectService {
 	return &ProjectService{
-		repo: r}
+		repo:   r,
+		kafka:  w,
+		appURL: appURL,
+		user:   user,
+	}
 }
 
 type ProjectRepository interface {
 	SaveProject(ctx context.Context, project entity.Project) (int64, error)
 	ProjectByID(ctx context.Context, id int64) (entity.Project, error)
 	Projects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error)
-	AddProjectMembersByID(ctx context.Context, userID int64, projectID int64) error
+	AddProjectMembers(ctx context.Context, code string) error
 	UpdateProject(ctx context.Context, id int64, project entity.Project) error
 	DeleteProject(ctx context.Context, id int64) error
 	UserProjects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error)
 	ProjectUsers(ctx context.Context, projectID int64) ([]entity.User, error)
+	JoiningUsers(ctx context.Context, projectID int64, userID int64, code string) error
+	GetCodeProjectUser(ctx context.Context, projectID int64, userEmail string) (string, error)
 }
 
 func (p *ProjectService) AddProject(ctx context.Context, project entity.Project) error {
@@ -83,9 +95,17 @@ func (p *ProjectService) Projects(ctx context.Context) ([]entity.Project, error)
 	return projects, nil
 }
 
-func (p *ProjectService) AddProjectMembers(ctx context.Context, projectID int64, userID int64) error {
-	user := ctx.Value("user").(entity.User)
+func (p *ProjectService) AddProjectMembers(ctx context.Context, code string) error {
+	err := p.repo.AddProjectMembers(ctx, code)
+	if err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func (p *ProjectService) JoiningUsers(ctx context.Context, projectID int64, userEmail string) error {
+	user := ctx.Value("user").(entity.User)
 	project, err := p.repo.ProjectByID(ctx, projectID)
 	if err != nil {
 		return err
@@ -94,10 +114,31 @@ func (p *ProjectService) AddProjectMembers(ctx context.Context, projectID int64,
 	if project.UserID != user.ID {
 		return fmt.Errorf("add project member: %w", entity.ErrForbidden)
 	}
+	code := uuid.NewString()
 
-	err = p.repo.AddProjectMembersByID(ctx, userID, projectID)
+	userToInvite, err := p.user.UserByEmail(ctx, userEmail)
 	if err != nil {
-		return err
+		return fmt.Errorf("get user by email: %w", err)
+	}
+
+	err = p.repo.JoiningUsers(ctx, projectID, userToInvite.ID, code)
+	if err != nil {
+		return fmt.Errorf("joining user: %w", err)
+	}
+
+	email := SendEmail{
+		Text:    p.appURL + "/projects/joining?code=" + code,
+		To:      userEmail,
+		Subject: "Joining the project",
+	}
+	msg, err := json.Marshal(&email)
+	if err != nil {
+		return fmt.Errorf("failed to marshal message: ,%w", err)
+	}
+
+	err = p.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
+	if err != nil {
+		return fmt.Errorf("failed to write messages: %w", err)
 	}
 
 	return nil
