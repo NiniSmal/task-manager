@@ -59,10 +59,10 @@ func TestProjectRepository_SaveProject(t *testing.T) {
 		Members:   nil,
 	}
 
-	idPr, err := pr.SaveProject(ctx, project)
+	projectDB, err := pr.SaveProject(ctx, project)
 	require.NoError(t, err)
 
-	dbProject, err := pr.ProjectByID(ctx, idPr)
+	dbProject, err := pr.ProjectByID(ctx, projectDB.ID)
 	require.NoError(t, err)
 	require.Equal(t, project.Name, dbProject.Name)
 	require.Equal(t, project.CreatedAt.Unix(), dbProject.CreatedAt.Unix())
@@ -100,19 +100,19 @@ func TestProjectRepository_UpdateProject(t *testing.T) {
 		UserID:    user.ID,
 	}
 
-	idPr, err := pr.SaveProject(ctx, project)
+	projectDB, err := pr.SaveProject(ctx, project)
 	require.NoError(t, err)
 
 	project2 := entity.Project{
-		ID:        idPr,
+		ID:        projectDB.ID,
 		Name:      uuid.New().String(),
 		UpdatedAt: time.Now(),
 		UserID:    user.ID,
 	}
-	err = pr.UpdateProject(ctx, idPr, project2)
+	err = pr.UpdateProject(ctx, projectDB.ID, project2)
 	require.NoError(t, err)
 
-	dbProject, err := pr.ProjectByID(ctx, idPr)
+	dbProject, err := pr.ProjectByID(ctx, projectDB.ID)
 	require.NoError(t, err)
 	require.Equal(t, project2.Name, dbProject.Name)
 	require.Equal(t, project2.UpdatedAt.Unix(), dbProject.UpdatedAt.Unix())
@@ -130,14 +130,19 @@ func TestProjectRepository_AddProjectMembersByID(t *testing.T) {
 	user.ID = userID
 
 	project := entity.Project{UserID: userID}
-	projectID, err := pr.SaveProject(ctx, project)
+	projectDB, err := pr.SaveProject(ctx, project)
 	require.NoError(t, err)
-	project.ID = projectID
+	project.ID = projectDB.ID
 
-	err = pr.AddProjectMembersByID(ctx, userID, projectID)
+	code := uuid.NewString()
+
+	err = pr.JoiningUsers(ctx, project.ID, userID, code)
 	require.NoError(t, err)
 
-	users, err := pr.ProjectUsers(ctx, projectID)
+	err = pr.AddProjectMembers(ctx, code)
+	require.NoError(t, err)
+
+	users, err := pr.ProjectUsers(ctx, project.ID)
 	require.NoError(t, err)
 	require.Contains(t, users, user)
 }
@@ -167,9 +172,9 @@ func TestProjectRepository_UserProjects(t *testing.T) {
 		},
 	}
 	for i, project := range projects {
-		projectID, err := pr.SaveProject(ctx, project)
+		project, err := pr.SaveProject(ctx, project)
 		require.NoError(t, err)
-		projects[i].ID = projectID
+		projects[i].ID = project.ID
 	}
 	filter := entity.ProjectFilter{UserID: user.ID}
 	projectsDB, err := pr.UserProjects(ctx, filter)
@@ -206,9 +211,9 @@ func TestProjectRepository_Projects(t *testing.T) {
 		},
 	}
 	for i, project := range projects {
-		projectID, err := pr.SaveProject(ctx, project)
+		projectDB, err := pr.SaveProject(ctx, project)
 		require.NoError(t, err)
-		projects[i].ID = projectID
+		projects[i].ID = projectDB.ID
 	}
 	filter := entity.ProjectFilter{UserID: user.ID}
 	projectsDB, err := pr.Projects(ctx, filter)

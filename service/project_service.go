@@ -27,7 +27,7 @@ func NewProjectService(r ProjectRepository, w *kafka.Writer, appURL string, user
 }
 
 type ProjectRepository interface {
-	SaveProject(ctx context.Context, project entity.Project) (int64, error)
+	SaveProject(ctx context.Context, project entity.Project) (entity.Project, error)
 	ProjectByID(ctx context.Context, id int64) (entity.Project, error)
 	Projects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error)
 	AddProjectMembers(ctx context.Context, code string) error
@@ -36,13 +36,12 @@ type ProjectRepository interface {
 	UserProjects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error)
 	ProjectUsers(ctx context.Context, projectID int64) ([]entity.User, error)
 	JoiningUsers(ctx context.Context, projectID int64, userID int64, code string) error
-	GetCodeProjectUser(ctx context.Context, projectID int64, userEmail string) (string, error)
 }
 
-func (p *ProjectService) AddProject(ctx context.Context, project entity.Project) error {
+func (p *ProjectService) AddProject(ctx context.Context, project entity.Project) (entity.Project, error) {
 	err := project.Validate()
 	if err != nil {
-		return err
+		return entity.Project{}, err
 	}
 	project.CreatedAt = time.Now()
 	project.UpdatedAt = project.CreatedAt
@@ -50,12 +49,12 @@ func (p *ProjectService) AddProject(ctx context.Context, project entity.Project)
 	user := ctx.Value("user").(entity.User)
 	project.UserID = user.ID
 
-	_, err = p.repo.SaveProject(ctx, project)
+	projectDB, err := p.repo.SaveProject(ctx, project)
 	if err != nil {
-		return err
+		return entity.Project{}, err
 	}
 
-	return nil
+	return projectDB, nil
 }
 
 func (p *ProjectService) ProjectByID(ctx context.Context, projectID int64) (entity.Project, error) {
@@ -144,26 +143,29 @@ func (p *ProjectService) JoiningUsers(ctx context.Context, projectID int64, user
 	return nil
 }
 
-func (p *ProjectService) UpdateProject(ctx context.Context, projectID int64, project entity.Project) error {
+func (p *ProjectService) UpdateProject(ctx context.Context, projectID int64, project entity.Project) (entity.Project, error) {
 	user := ctx.Value("user").(entity.User)
 
 	projectOld, err := p.repo.ProjectByID(ctx, projectID)
 	if err != nil {
-		return fmt.Errorf("get project by projectID: %w", err)
+		return entity.Project{}, fmt.Errorf("get project by projectID: %w", err)
 	}
 
 	project.UpdatedAt = time.Now()
 
 	if user.Role != entity.RoleAdmin && user.ID != projectOld.UserID {
-		return fmt.Errorf("update project: %w", entity.ErrForbidden)
+		return entity.Project{}, fmt.Errorf("update project: %w", entity.ErrForbidden)
 	}
 
 	err = p.repo.UpdateProject(ctx, projectID, project)
 	if err != nil {
-		return fmt.Errorf("update project: %w", err)
+		return entity.Project{}, fmt.Errorf("update project: %w", err)
 	}
-
-	return nil
+	project, err = p.repo.ProjectByID(ctx, projectID)
+	if err != nil {
+		return entity.Project{}, fmt.Errorf("get project by projectID: %w", err)
+	}
+	return project, nil
 }
 
 func (p *ProjectService) DeleteProject(ctx context.Context, id int64) error {

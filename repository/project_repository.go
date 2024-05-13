@@ -19,10 +19,10 @@ func NewProjectRepository(db *sql.DB, rds *redis.Client) *ProjectRepository {
 		rds: rds,
 	}
 }
-func (p *ProjectRepository) SaveProject(ctx context.Context, project entity.Project) (int64, error) {
+func (p *ProjectRepository) SaveProject(ctx context.Context, project entity.Project) (entity.Project, error) {
 	tx, err := p.db.Begin()
 	if err != nil {
-		return 0, err
+		return entity.Project{}, err
 	}
 	defer tx.Rollback()
 
@@ -30,20 +30,20 @@ func (p *ProjectRepository) SaveProject(ctx context.Context, project entity.Proj
 
 	err = tx.QueryRowContext(ctx, query, project.Name, project.CreatedAt, project.UpdatedAt, project.UserID).Scan(&project.ID)
 	if err != nil {
-		return 0, err
+		return entity.Project{}, err
 	}
 
 	err = p.addProjectMembersByID(ctx, tx, project.UserID, project.ID)
 	if err != nil {
-		return 0, err
+		return entity.Project{}, err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return 0, err
+		return entity.Project{}, err
 	}
 
-	return project.ID, nil
+	return project, nil
 }
 
 func (p *ProjectRepository) ProjectByID(ctx context.Context, id int64) (entity.Project, error) {
@@ -89,10 +89,10 @@ func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectF
 	return projects, nil
 }
 
-func (p *ProjectRepository) UpdateProject(ctx context.Context, projectID int64, project entity.Project) error {
+func (p *ProjectRepository) UpdateProject(ctx context.Context, id int64, project entity.Project) error {
 	query := "UPDATE projects SET name = $1, updated_at = $2 WHERE id = $3"
 
-	_, err := p.db.ExecContext(ctx, query, project.Name, project.UpdatedAt, projectID)
+	_, err := p.db.ExecContext(ctx, query, project.Name, project.UpdatedAt, id)
 	if err != nil {
 		return err
 	}
@@ -206,15 +206,4 @@ func (p *ProjectRepository) JoiningUsers(ctx context.Context, projectID int64, u
 		return err
 	}
 	return nil
-}
-
-func (p *ProjectRepository) GetCodeProjectUser(ctx context.Context, projectID int64, userEmail string) (string, error) {
-	query := "SELECT code FROM codes_projects_users WHERE projects_id = $1 AND user_email = $2"
-
-	var code string
-	err := p.db.QueryRowContext(ctx, query, projectID, userEmail).Scan(&code)
-	if err != nil {
-		return "", err
-	}
-	return code, nil
 }

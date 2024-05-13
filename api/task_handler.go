@@ -23,7 +23,7 @@ func NewTaskHandler(s TaskService) *TaskHandler {
 }
 
 type TaskService interface {
-	AddTask(ctx context.Context, task entity.Task) error
+	AddTask(ctx context.Context, task entity.Task) (entity.Task, error)
 	GetTask(ctx context.Context, id int64) (entity.Task, error)
 	GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error)
 	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
@@ -85,7 +85,12 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.AddTask(r.Context(), task) // передаем контекст, полученный из запроса.
+	taskDB, err := h.service.AddTask(r.Context(), task)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+	err = sendJSON(w, taskDB)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return

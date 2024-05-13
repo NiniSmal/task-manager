@@ -129,8 +129,11 @@ func (r *UserRepository) getSessionFromCache(ctx context.Context, sessionID uuid
 	return user, nil
 }
 
-func (r *UserRepository) Users(ctx context.Context, intervalTime string) ([]entity.User, error) {
-	query := "SELECT id, email, created_at, role, verification, verification_code FROM users WHERE (created_at +interval '1 day') < Now()"
+func (r *UserRepository) UsersToSendVIP(ctx context.Context) ([]entity.User, error) {
+	query := `SELECT u.id, u.email, u.created_at, u.role, u.verification, u.verification_code 
+FROM users u LEFT JOIN vip_messages vm ON vm.user_id = u.id 
+WHERE u.created_at < now() - INTERVAL '1 month' AND vm.created_at IS NULL`
+
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -149,4 +152,13 @@ func (r *UserRepository) Users(ctx context.Context, intervalTime string) ([]enti
 		users = append(users, user)
 	}
 	return users, nil
+}
+
+func (r *UserRepository) SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error {
+	query := "INSERT INTO vip_messages(user_id, created_at) VALUES($1, $2)"
+	_, err := r.db.ExecContext(ctx, query, userID, createdAt)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -21,10 +21,10 @@ func NewProjectHandler(s ProjectService) *ProjectHandler {
 }
 
 type ProjectService interface {
-	AddProject(ctx context.Context, project entity.Project) error
+	AddProject(ctx context.Context, project entity.Project) (entity.Project, error)
 	ProjectByID(ctx context.Context, id int64) (entity.Project, error)
 	Projects(ctx context.Context) ([]entity.Project, error)
-	UpdateProject(ctx context.Context, id int64, project entity.Project) error
+	UpdateProject(ctx context.Context, id int64, project entity.Project) (entity.Project, error)
 	DeleteProject(ctx context.Context, id int64) error
 	AddProjectMembers(ctx context.Context, code string) error
 	UserProjects(ctx context.Context) ([]entity.Project, error)
@@ -41,7 +41,12 @@ func (p *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.service.AddProject(r.Context(), project)
+	projectDB, err := p.service.AddProject(r.Context(), project)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+	err = sendJSON(w, projectDB)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
@@ -107,7 +112,12 @@ func (p *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.service.UpdateProject(ctx, id, project)
+	projectDB, err := p.service.UpdateProject(ctx, id, project)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+	err = sendJSON(w, projectDB)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
@@ -116,12 +126,12 @@ func (p *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 func (p *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	idR := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idR)
+	id, err := strconv.ParseInt(idR, 10, 64)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
 	}
-	err = p.service.DeleteProject(ctx, int64(id))
+	err = p.service.DeleteProject(ctx, id)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return

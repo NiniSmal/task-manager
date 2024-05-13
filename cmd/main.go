@@ -4,13 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
-	"log/slog"
-	"net/http"
-	"net/url"
-	"os"
-	"time"
-
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
@@ -20,6 +13,12 @@ import (
 	"gitlab.com/nina8884807/task-manager/config"
 	"gitlab.com/nina8884807/task-manager/repository"
 	"gitlab.com/nina8884807/task-manager/service"
+	"log"
+	"log/slog"
+	"net/http"
+	"net/url"
+	"os"
+	"time"
 )
 
 func main() {
@@ -147,11 +146,14 @@ func main() {
 	router.Get("/api/projects/joining", hp.AddProjectMember)
 
 	go func() {
-		err = su.SendVIPStatus(ctx, cfg.IntervalTime)
-		if err != nil {
-			logger.Error("send VIP Status", err)
+		for {
+			logger.Info("started SendVIPStatus job")
+			err = su.SendVIPStatus(ctx, cfg.IntervalTime)
+			if err != nil {
+				logger.Error("send VIP Status", "error", err)
+			}
+			time.Sleep(time.Minute)
 		}
-		time.Sleep(time.Millisecond * 60)
 	}()
 
 	logger.Info(fmt.Sprintf("start http server at port: %v", cfg.Port))

@@ -27,38 +27,38 @@ func NewTaskService(r TaskRepository, pr ProjectRepository, w *kafka.Writer) *Ta
 }
 
 type TaskRepository interface {
-	Create(ctx context.Context, task entity.Task) (int64, error)
+	Create(ctx context.Context, task entity.Task) (entity.Task, error)
 	ByID(ctx context.Context, id int64) (entity.Task, error)
 	Tasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error)
 	Update(ctx context.Context, id int64, task entity.UpdateTask) error
 	Delete(ctx context.Context, id int64) error
 }
 
-func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
+func (s *TaskService) AddTask(ctx context.Context, task entity.Task) (entity.Task, error) {
 	err := task.Validate()
 	if err != nil {
-		return err
+		return entity.Task{}, err
 	}
 
 	user := ctx.Value("user").(entity.User)
 
 	users, err := s.projects.ProjectUsers(ctx, task.ProjectID)
 	if err != nil {
-		return err
+		return entity.Task{}, err
 	}
 
 	err = isUserInProject(users, user.ID)
 	if err != nil {
-		return err
+		return entity.Task{}, err
 	}
 
 	task.Status = entity.StatusNotDone
 	task.CreatedAt = time.Now()
 	task.UserID = user.ID
 
-	_, err = s.tasks.Create(ctx, task)
+	taskDB, err := s.tasks.Create(ctx, task)
 	if err != nil {
-		return fmt.Errorf("save task: %w", err)
+		return entity.Task{}, err
 	}
 
 	err = s.sendCreateTaskNotification(ctx, task.ProjectID)
@@ -68,7 +68,7 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) error {
 		err = nil
 	}
 
-	return nil
+	return taskDB, nil
 }
 
 func (s *TaskService) sendCreateTaskNotification(ctx context.Context, projectID int64) error {
