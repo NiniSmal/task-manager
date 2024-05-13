@@ -50,6 +50,8 @@ func main() {
 	defer db.Close()
 
 	ctx := context.Background()
+	ctx = context.WithValue(ctx, "logger", logger)
+
 	rds := redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisAddr,
 		Password: "",

@@ -91,10 +91,10 @@ func applyTaskFilter(query string, f entity.TaskFilter) (string, []any) {
 	return query, args
 }
 
-func (r *TaskRepository) Update(ctx context.Context, taskID int64, task entity.UpdateTask) error {
-	query := "UPDATE tasks SET name = $1, description = $2, status = $3, user_id = $4, project_id = $5 WHERE id = $6"
+func (r *TaskRepository) Update(ctx context.Context, id int64, task entity.UpdateTask) error {
+	query := "UPDATE tasks SET name = $1, description = $2, status = $3 WHERE id = $4"
 
-	_, err := r.db.ExecContext(ctx, query, task.Name, task.Description, task.Status, task.UserID, task.ProjectID, taskID)
+	_, err := r.db.ExecContext(ctx, query, task.Name, task.Description, task.Status, id)
 	if err != nil {
 		return err
 	}

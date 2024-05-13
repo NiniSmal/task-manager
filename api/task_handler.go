@@ -26,7 +26,7 @@ type TaskService interface {
 	AddTask(ctx context.Context, task entity.Task) (entity.Task, error)
 	GetTask(ctx context.Context, id int64) (entity.Task, error)
 	GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error)
-	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error
+	UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) (entity.Task, error)
 	Delete(ctx context.Context, id int64) error
 }
 type apiError struct {
@@ -146,7 +146,7 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	idR := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idR)
+	id, err := strconv.ParseInt(idR, 10, 64)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
@@ -159,11 +159,17 @@ func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.UpdateTask(ctx, int64(id), task)
+	taskUp, err := h.service.UpdateTask(ctx, id, task)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
 	}
+	err = sendJSON(w, taskUp)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+
 }
 
 func (h *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {

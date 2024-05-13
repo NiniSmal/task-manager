@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"log/slog"
@@ -139,31 +138,33 @@ func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]e
 	return tasks, nil
 }
 
-func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) error {
+func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) (entity.Task, error) {
 	user := ctx.Value("user").(entity.User)
 
 	if task.Status != entity.StatusDone && task.Status != entity.StatusNotDone {
-		return errors.New("status  is not correct")
+		return entity.Task{}, fmt.Errorf("update task: %w", entity.ErrForbidden)
 	}
 
 	taskOld, err := s.tasks.ByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("get task by id: %w", err)
+		return entity.Task{}, err
 	}
 
 	if user.Role == entity.RoleAdmin {
 		err = s.tasks.Update(ctx, id, task)
 		if err != nil {
-			return fmt.Errorf("update task: %w", err)
+			return entity.Task{}, err
 		}
 	}
 	if user.ID == taskOld.UserID {
+
 		err = s.tasks.Update(ctx, id, task)
 		if err != nil {
-			return fmt.Errorf("update task: %w", err)
+			return entity.Task{}, err
 		}
 	}
-	return nil
+	taskUp, err := s.tasks.ByID(ctx, id)
+	return taskUp, nil
 }
 
 func (s *TaskService) Delete(ctx context.Context, id int64) error {
