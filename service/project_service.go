@@ -2,25 +2,23 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/segmentio/kafka-go"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"time"
 )
 
 type ProjectService struct {
 	repo   ProjectRepository
-	kafka  *kafka.Writer
+	sender *SenderService
 	appURL string
 	user   UserRepository
 }
 
-func NewProjectService(r ProjectRepository, w *kafka.Writer, appURL string, user UserRepository) *ProjectService {
+func NewProjectService(r ProjectRepository, s *SenderService, appURL string, user UserRepository) *ProjectService {
 	return &ProjectService{
 		repo:   r,
-		kafka:  w,
+		sender: s,
 		appURL: appURL,
 		user:   user,
 	}
@@ -130,16 +128,10 @@ func (p *ProjectService) JoiningUsers(ctx context.Context, projectID int64, user
 		To:      userEmail,
 		Subject: "Joining the project",
 	}
-	msg, err := json.Marshal(&email)
+	err = p.sender.SendEmail(ctx, email)
 	if err != nil {
-		return fmt.Errorf("failed to marshal message: ,%w", err)
+		return fmt.Errorf("send email: %w", err)
 	}
-
-	err = p.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
-	if err != nil {
-		return fmt.Errorf("failed to write messages: %w", err)
-	}
-
 	return nil
 }
 

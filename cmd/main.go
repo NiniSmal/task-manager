@@ -108,12 +108,15 @@ func main() {
 	}
 
 	ut := repository.NewUserRepository(db, rds)
-	su := service.NewUserService(ut, kafkaWriter, cfg.AppURL)
 	rp := repository.NewProjectRepository(db, rds)
-	sp := service.NewProjectService(rp, kafkaWriter, cfg.AppURL, ut)
-	hp := api.NewProjectHandler(sp)
 	rt := repository.NewTaskRepository(db, rds)
+
+	ss := service.NewSenderService(kafkaWriter)
+	su := service.NewUserService(ut, ss, cfg.AppURL)
+	sp := service.NewProjectService(rp, ss, cfg.AppURL, ut)
 	st := service.NewTaskService(rt, rp, kafkaWriter)
+
+	hp := api.NewProjectHandler(sp)
 	ht := api.NewTaskHandler(st)
 
 	hu := api.NewUserHandler(su, appURL.Hostname())

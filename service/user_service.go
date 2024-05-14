@@ -2,26 +2,24 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/segmentio/kafka-go"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
 
 type UserService struct {
 	repo   UserRepository
-	kafka  *kafka.Writer
+	sender *SenderService
 	appURL string
 }
 
-func NewUserService(r UserRepository, w *kafka.Writer, appURL string) *UserService {
+func NewUserService(r UserRepository, s *SenderService, appURL string) *UserService {
 	return &UserService{
 		repo:   r,
-		kafka:  w,
+		sender: s,
 		appURL: appURL,
 	}
 }
@@ -34,26 +32,6 @@ type UserRepository interface {
 	UpdateVerificationCode(ctx context.Context, id int64, verificationCode string) error
 	UsersToSendVIP(ctx context.Context) ([]entity.User, error)
 	SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error
-}
-
-type Email struct {
-	Text    string `json:"text"`
-	To      string `json:"to"`
-	Subject string `json:"subject"`
-}
-
-func (u *UserService) sendEmail(ctx context.Context, email Email) error {
-	msg, err := json.Marshal(&email)
-	if err != nil {
-		return fmt.Errorf("marshal message: %w", err)
-	}
-
-	err = u.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
-	if err != nil {
-		return fmt.Errorf("write messages: %w", err)
-	}
-
-	return nil
 }
 
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
@@ -90,7 +68,7 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		Subject: "Account verification",
 	}
 
-	err = u.sendEmail(ctx, email)
+	err = u.sender.SendEmail(ctx, email)
 	if err != nil {
 		return fmt.Errorf("send email: %w", err)
 	}
@@ -139,7 +117,7 @@ func (u *UserService) SendVIPStatus(ctx context.Context, intervalTime string) er
 			To:      user.Email,
 			Subject: "VIP Status",
 		}
-		err = u.sendEmail(ctx, email)
+		err = u.sender.SendEmail(ctx, email)
 		if err != nil {
 			return fmt.Errorf("send email: %w", err)
 		}
@@ -171,7 +149,7 @@ func (u *UserService) ResendVerificationCode(ctx context.Context, email string) 
 		Subject: "Account verification",
 	}
 
-	err = u.sendEmail(ctx, emailToSend)
+	err = u.sender.SendEmail(ctx, emailToSend)
 	if err != nil {
 		return fmt.Errorf("send email: %w", err)
 	}
