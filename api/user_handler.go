@@ -29,6 +29,7 @@ type UserService interface {
 	CreateUser(ctx context.Context, login, password string) error
 	Login(ctx context.Context, login, password string) (uuid.UUID, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) error
+	RepeatRequestVerification(ctx context.Context, email string) error
 }
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +124,25 @@ func (u *UserHandler) Verification(w http.ResponseWriter, r *http.Request) {
 	err := u.service.Verification(ctx, user.VerificationCode, user.Verification)
 	if err != nil {
 		HandlerError(ctx, w, err)
+		return
 	}
 
 	_, _ = fmt.Fprintln(w, "verification successful, now you can login")
+}
+
+func (u *UserHandler) RepeatRequestVerification(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var user entity.User
+
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+	err = u.service.RepeatRequestVerification(ctx, user.Email)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
 }

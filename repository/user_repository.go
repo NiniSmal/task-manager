@@ -96,6 +96,14 @@ func (r *UserRepository) Verification(ctx context.Context, verificationCode stri
 	}
 	return id, nil
 }
+func (r *UserRepository) UpdateVerificationCode(ctx context.Context, id int64, verificationCode string) error {
+	query := "UPDATE users SET verification_code =$1 WHERE id = $2"
+	_, err := r.db.ExecContext(ctx, query, verificationCode, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func (r *UserRepository) GetSession(ctx context.Context, sessionID uuid.UUID) (entity.User, error) {
 	user, err := r.getSessionFromCache(ctx, sessionID)

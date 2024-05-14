@@ -44,6 +44,8 @@ paths:
                     name:
                       type: string
                       example: buy milk
+                    description:
+                      type: string
                     status:
                       type: string
                       enum:
@@ -77,6 +79,9 @@ paths:
                 name:
                   type: string
                   example: buy milk
+                description:
+                  type: string
+                  example: 3 litre
                 status:
                   type: string
                   enum:
@@ -111,6 +116,9 @@ paths:
                     name:
                       type: string
                       example: bye milk
+                    description:
+                      type: string
+                      example: 3 litre
                     status:
                       type: string
                       enum:
@@ -158,6 +166,9 @@ paths:
                     name:
                       type: string
                       example: buy milk
+                    description:
+                      type: string
+                      example: 3 litre
                     status:
                       type: string
                       enum:
@@ -339,6 +350,32 @@ paths:
               schema:
                 type: string
                 example: 'verification successful, now you can login'
+
+  /repeat/verification:
+    post:
+      summary: Verification
+      tags:
+        - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: nina@mail.ru
+                  format: email
+                  minimum: 5
+                  maximum: 200
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ''
 
   /projects:
     post:

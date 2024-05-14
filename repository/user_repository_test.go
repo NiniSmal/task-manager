@@ -14,7 +14,7 @@ import (
 
 func UserConnection(t *testing.T) (*sql.DB, *redis.Client) {
 	t.Helper() //помечает как вспомогвтельную
-	// docker run -d -p 9000:5432 -e POSTGRES_PASSWORD=dev -e POSTGRES_DATABASE=postgres postgres
+
 	db, err := sql.Open("postgres", "postgres://postgres:dev@localhost:9000/postgres?sslmode=disable")
 
 	require.NoError(t, err)
@@ -184,4 +184,29 @@ func TestUserRepository_GetSessionFromCache_Error(t *testing.T) {
 
 	_, err := ur.getSessionFromCache(ctx, uuid.New())
 	require.Error(t, err)
+}
+
+func TestUserRepository_UpdateVerificationCode(t *testing.T) {
+	db, rds := UserConnection(t)
+	ur := NewUserRepository(db, rds)
+	ctx := context.Background()
+
+	user := entity.User{
+		Email:            uuid.New().String(),
+		Password:         uuid.New().String(),
+		CreatedAt:        time.Time{},
+		Role:             "user",
+		Verification:     false,
+		VerificationCode: "123",
+	}
+
+	_, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+
+	code := "456"
+	user.VerificationCode = code
+	err = ur.UpdateVerificationCode(ctx, user.ID, user.VerificationCode)
+	require.NoError(t, err)
+	require.Equal(t, code, user.VerificationCode)
+
 }

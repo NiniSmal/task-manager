@@ -31,6 +31,7 @@ type UserRepository interface {
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error
 	UserByEmail(ctx context.Context, login string) (entity.User, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) (int64, error)
+	UpdateVerificationCode(ctx context.Context, id int64, verificationCode string) error
 	UsersToSendVIP(ctx context.Context) ([]entity.User, error)
 	SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error
 }
@@ -78,12 +79,12 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 
 	msg, err := json.Marshal(&email)
 	if err != nil {
-		return fmt.Errorf("failed to marshal message: ,%w", err)
+		return fmt.Errorf("marshal message: %w", err)
 	}
 
 	err = u.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
 	if err != nil {
-		return fmt.Errorf("failed to write messages: %w", err)
+		return fmt.Errorf("write messages: %w", err)
 	}
 
 	return nil
@@ -144,5 +145,33 @@ func (u *UserService) SendVIPStatus(ctx context.Context, intervalTime string) er
 			return fmt.Errorf("save VIP message: %w", err)
 		}
 	}
+	return nil
+}
+
+func (u *UserService) RepeatRequestVerification(ctx context.Context, login string) error {
+	user, err := u.repo.UserByEmail(ctx, login)
+	if err != nil {
+		return fmt.Errorf("get user by login: %w", err)
+	}
+
+	user.VerificationCode = uuid.NewString()
+	err = u.repo.UpdateVerificationCode(ctx, user.ID, user.VerificationCode)
+
+	email := SendEmail{
+		Text:    u.appURL + "/verification?code=" + user.VerificationCode,
+		To:      login,
+		Subject: "Account verification",
+	}
+
+	msg, err := json.Marshal(&email)
+	if err != nil {
+		return fmt.Errorf("marshal message: %w", err)
+	}
+
+	err = u.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
+	if err != nil {
+		return fmt.Errorf("write messages: %w", err)
+	}
+
 	return nil
 }

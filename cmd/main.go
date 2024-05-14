@@ -146,6 +146,7 @@ func main() {
 	router.Post("/api/logout", hu.Logout)
 	router.Get("/api/verification", hu.Verification)
 	router.Get("/api/projects/joining", hp.AddProjectMember)
+	router.Post("/api/repeat/verification", hu.RepeatRequestVerification)
 
 	go func() {
 		for {
