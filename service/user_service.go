@@ -42,6 +42,26 @@ type SendEmail struct {
 	Subject string `json:"subject"`
 }
 
+func (u *UserService) sendEmail(ctx context.Context, user entity.User) error {
+	email := SendEmail{
+		Text:    u.appURL + "/verification?code=" + user.VerificationCode,
+		To:      user.Email,
+		Subject: "Account verification",
+	}
+
+	msg, err := json.Marshal(&email)
+	if err != nil {
+		return fmt.Errorf("marshal message: %w", err)
+	}
+
+	err = u.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
+	if err != nil {
+		return fmt.Errorf("write messages: %w", err)
+	}
+
+	return nil
+}
+
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
 	user := entity.User{
 		Email:            login,
@@ -71,20 +91,9 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 		return fmt.Errorf("create user: %w", err)
 	}
 
-	email := SendEmail{
-		Text:    u.appURL + "/verification?code=" + user.VerificationCode,
-		To:      user.Email,
-		Subject: "Account verification",
-	}
-
-	msg, err := json.Marshal(&email)
+	err = u.sendEmail(ctx, user)
 	if err != nil {
-		return fmt.Errorf("marshal message: %w", err)
-	}
-
-	err = u.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
-	if err != nil {
-		return fmt.Errorf("write messages: %w", err)
+		return fmt.Errorf("send email: %w", err)
 	}
 
 	return nil
@@ -148,29 +157,21 @@ func (u *UserService) SendVIPStatus(ctx context.Context, intervalTime string) er
 	return nil
 }
 
-func (u *UserService) RepeatRequestVerification(ctx context.Context, login string) error {
-	user, err := u.repo.UserByEmail(ctx, login)
+func (u *UserService) ResendVerificationCode(ctx context.Context, email string) error {
+	user, err := u.repo.UserByEmail(ctx, email)
 	if err != nil {
-		return fmt.Errorf("get user by login: %w", err)
+		return fmt.Errorf("get user by email: %w", err)
 	}
 
 	user.VerificationCode = uuid.NewString()
 	err = u.repo.UpdateVerificationCode(ctx, user.ID, user.VerificationCode)
-
-	email := SendEmail{
-		Text:    u.appURL + "/verification?code=" + user.VerificationCode,
-		To:      login,
-		Subject: "Account verification",
+	if err != nil {
+		return fmt.Errorf("update verification code: %w", err)
 	}
 
-	msg, err := json.Marshal(&email)
+	err = u.sendEmail(ctx, user)
 	if err != nil {
-		return fmt.Errorf("marshal message: %w", err)
-	}
-
-	err = u.kafka.WriteMessages(ctx, kafka.Message{Value: msg})
-	if err != nil {
-		return fmt.Errorf("write messages: %w", err)
+		return fmt.Errorf("send email: %w", err)
 	}
 
 	return nil

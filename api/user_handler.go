@@ -29,7 +29,7 @@ type UserService interface {
 	CreateUser(ctx context.Context, login, password string) error
 	Login(ctx context.Context, login, password string) (uuid.UUID, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) error
-	RepeatRequestVerification(ctx context.Context, email string) error
+	ResendVerificationCode(ctx context.Context, email string) error
 }
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -140,7 +140,7 @@ func (u *UserHandler) RepeatRequestVerification(w http.ResponseWriter, r *http.R
 		HandlerError(ctx, w, err)
 		return
 	}
-	err = u.service.RepeatRequestVerification(ctx, user.Email)
+	err = u.service.ResendVerificationCode(ctx, user.Email)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
