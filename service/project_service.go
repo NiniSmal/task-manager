@@ -125,7 +125,7 @@ func (p *ProjectService) JoiningUsers(ctx context.Context, projectID int64, user
 		return fmt.Errorf("joining user: %w", err)
 	}
 
-	email := SendEmail{
+	email := Email{
 		Text:    p.appURL + "/projects/joining?code=" + code,
 		To:      userEmail,
 		Subject: "Joining the project",
