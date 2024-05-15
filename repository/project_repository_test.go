@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/google/uuid"
+	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/nina8884807/task-manager/entity"
@@ -28,7 +29,13 @@ func DBConnection(t *testing.T) (*sql.DB, *redis.Client) {
 	})
 	err = db.Ping()
 	require.NoError(t, err)
+
+	goose.SetLogger(goose.NopLogger())
+	err = goose.Up(db, "../migrations")
+	require.NoError(t, err)
+
 	ctx := context.Background()
+
 	redisAddr := os.Getenv("REDIS_ADDR")
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
