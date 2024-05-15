@@ -32,6 +32,8 @@ type UserRepository interface {
 	UpdateVerificationCode(ctx context.Context, id int64, verificationCode string) error
 	UsersToSendVIP(ctx context.Context) ([]entity.User, error)
 	SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error
+	UsersToSendAuth(ctx context.Context) ([]entity.User, error)
+	SaveSendAbsenceReminder(ctx context.Context, userID int64, createdAT time.Time) error
 }
 
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
@@ -154,5 +156,30 @@ func (u *UserService) ResendVerificationCode(ctx context.Context, email string) 
 		return fmt.Errorf("send email: %w", err)
 	}
 
+	return nil
+}
+
+// добавить функцию, кот. шлет письмо на почту, если пользователь не заходил больше чем N дней.
+func (u *UserService) SendAnAbsenceLetter(ctx context.Context, intervalTime string) error {
+	users, err := u.repo.UsersToSendAuth(ctx)
+	if err != nil {
+		return fmt.Errorf("get users: %w", err)
+	}
+
+	for _, user := range users {
+		email := Email{
+			Text:    fmt.Sprintf("you haven't logged into your account for %s days", intervalTime),
+			To:      user.Email,
+			Subject: "Absence reminder",
+		}
+		err = u.sender.SendEmail(ctx, email)
+		if err != nil {
+			return fmt.Errorf("send email: %w", err)
+		}
+		err = u.repo.SaveSendAbsenceReminder(ctx, user.ID, time.Now())
+		if err != nil {
+			return fmt.Errorf("save send message about absence remider; %w", err)
+		}
+	}
 	return nil
 }

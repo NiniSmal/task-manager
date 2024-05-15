@@ -30,6 +30,7 @@ type UserService interface {
 	Login(ctx context.Context, login, password string) (uuid.UUID, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) error
 	ResendVerificationCode(ctx context.Context, email string) error
+	SendAnAbsenceLetter(ctx context.Context, intervalTime string) error
 }
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {

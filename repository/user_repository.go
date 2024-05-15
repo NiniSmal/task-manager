@@ -16,6 +16,16 @@ type UserRepository struct {
 	rds *redis.Client
 }
 
+func (r *UserRepository) UsersToSendAuth(ctx context.Context) ([]entity.User, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *UserRepository) SaveSendAbsenceReminder(ctx context.Context, userID int64, createdAT time.Time) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewUserRepository(db *sql.DB, rds *redis.Client) *UserRepository {
 	return &UserRepository{
 		db:  db,
