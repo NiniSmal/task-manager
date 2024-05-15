@@ -7,13 +7,19 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/nina8884807/task-manager/entity"
+	"os"
 	"testing"
 	"time"
 )
 
-func ProjectConnection(t *testing.T) (*sql.DB, *redis.Client) {
+func DBConnection(t *testing.T) (*sql.DB, *redis.Client) {
 	t.Helper()
-	db, err := sql.Open("postgres", "postgres://postgres:dev@localhost:9000/postgres?sslmode=disable")
+	dsn := os.Getenv("POSTGRES_DSN")
+	if dsn == "" {
+		dsn = "postgres://postgres:dev@localhost:9000/postgres?sslmode=disable"
+	}
+
+	db, err := sql.Open("postgres", dsn)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
@@ -23,8 +29,12 @@ func ProjectConnection(t *testing.T) (*sql.DB, *redis.Client) {
 	err = db.Ping()
 	require.NoError(t, err)
 	ctx := context.Background()
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
+	}
 	rds := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     redisAddr,
 		Password: "",
 		DB:       0,
 	})
@@ -39,7 +49,7 @@ func ProjectConnection(t *testing.T) (*sql.DB, *redis.Client) {
 }
 
 func TestProjectRepository_SaveProject(t *testing.T) {
-	db, rds := ProjectConnection(t)
+	db, rds := DBConnection(t)
 	pr := NewProjectRepository(db, rds)
 	ur := NewUserRepository(db, rds)
 
@@ -72,7 +82,7 @@ func TestProjectRepository_SaveProject(t *testing.T) {
 }
 
 func TestProjectRepository_ByID_Error(t *testing.T) {
-	db, rds := ProjectConnection(t)
+	db, rds := DBConnection(t)
 	pr := NewTaskRepository(db, rds)
 	ctx := context.Background()
 	_, err := pr.ByID(ctx, 1234)
@@ -81,7 +91,7 @@ func TestProjectRepository_ByID_Error(t *testing.T) {
 
 // ошибка, не могу найти
 func TestProjectRepository_UpdateProject(t *testing.T) {
-	db, rds := ProjectConnection(t)
+	db, rds := DBConnection(t)
 	pr := NewProjectRepository(db, rds)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
@@ -119,7 +129,7 @@ func TestProjectRepository_UpdateProject(t *testing.T) {
 }
 
 func TestProjectRepository_AddProjectMembersByID(t *testing.T) {
-	db, rds := ProjectConnection(t)
+	db, rds := DBConnection(t)
 	pr := NewProjectRepository(db, rds)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
@@ -148,7 +158,7 @@ func TestProjectRepository_AddProjectMembersByID(t *testing.T) {
 }
 
 func TestProjectRepository_UserProjects(t *testing.T) {
-	db, rds := ProjectConnection(t)
+	db, rds := DBConnection(t)
 	pr := NewProjectRepository(db, rds)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
@@ -186,7 +196,7 @@ func TestProjectRepository_UserProjects(t *testing.T) {
 }
 
 func TestProjectRepository_Projects(t *testing.T) {
-	db, rds := ProjectConnection(t)
+	db, rds := DBConnection(t)
 	pr := NewProjectRepository(db, rds)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()

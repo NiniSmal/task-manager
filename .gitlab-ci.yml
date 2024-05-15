@@ -27,9 +27,11 @@ test:
   image: golang:1.21.0
   services:
     - postgres:15.3-alpine
+    - redis:7.2-alpine
   variables:
     POSTGRES_PASSWORD: postgres
     POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+    REDIS_ADDR: redis:6379
   extends: .go-cache
   script:
     - go test -v -race -coverprofile=coverage.out ./...

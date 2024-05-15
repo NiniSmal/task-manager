@@ -2,9 +2,7 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"strconv"
@@ -27,35 +25,8 @@ func TestApplyTaskFilter(t *testing.T) {
 	require.Equal(t, wantArgs, args)
 }
 
-func TaskConnection(t *testing.T) (*sql.DB, *redis.Client) {
-	t.Helper()
-	db, err := sql.Open("postgres", "postgres://postgres:dev@localhost:9000/postgres?sslmode=disable")
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		err := db.Close()
-		require.NoError(t, err)
-	})
-	err = db.Ping()
-	require.NoError(t, err)
-	ctx := context.Background()
-	rds := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-	t.Cleanup(func() {
-		err := rds.Close()
-		require.NoError(t, err)
-	})
-	_, err = rds.Ping(ctx).Result()
-	require.NoError(t, err)
-
-	return db, rds
-}
-
 func TestTaskRepository_Create(t *testing.T) {
-	db, rds := TaskConnection(t)
+	db, rds := DBConnection(t)
 	tr := NewTaskRepository(db, rds)
 	ur := NewUserRepository(db, rds)
 	pr := NewProjectRepository(db, rds)
@@ -93,7 +64,7 @@ func TestTaskRepository_Create(t *testing.T) {
 }
 
 func TestTaskRepository_Tasks(t *testing.T) {
-	db, rds := TaskConnection(t)
+	db, rds := DBConnection(t)
 	tr := NewTaskRepository(db, rds)
 	ur := NewUserRepository(db, rds)
 	pr := NewProjectRepository(db, rds)
@@ -142,7 +113,7 @@ func TestTaskRepository_Tasks(t *testing.T) {
 }
 
 func TestTaskRepository_ByID_Error(t *testing.T) {
-	db, rds := TaskConnection(t)
+	db, rds := DBConnection(t)
 	tr := NewTaskRepository(db, rds)
 	ctx := context.Background()
 	_, err := tr.ByID(ctx, 1234)
@@ -150,7 +121,7 @@ func TestTaskRepository_ByID_Error(t *testing.T) {
 }
 
 func TestTaskRepository_Update(t *testing.T) {
-	db, rds := TaskConnection(t)
+	db, rds := DBConnection(t)
 	tr := NewTaskRepository(db, rds)
 	ur := NewUserRepository(db, rds)
 	pr := NewProjectRepository(db, rds)
@@ -196,7 +167,7 @@ func TestTaskRepository_Update(t *testing.T) {
 
 }
 func TestTaskRepository_Delete(t *testing.T) {
-	db, rds := TaskConnection(t)
+	db, rds := DBConnection(t)
 	tr := NewTaskRepository(db, rds)
 	ur := NewUserRepository(db, rds)
 	pr := NewProjectRepository(db, rds)

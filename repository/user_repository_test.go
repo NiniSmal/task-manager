@@ -2,47 +2,16 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	"gitlab.com/nina8884807/task-manager/entity"
 	"testing"
 	"time"
 )
 
-func UserConnection(t *testing.T) (*sql.DB, *redis.Client) {
-	t.Helper() //помечает как вспомогвтельную
-
-	db, err := sql.Open("postgres", "postgres://postgres:dev@localhost:9000/postgres?sslmode=disable")
-
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		err := db.Close()
-		require.NoError(t, err)
-	})
-	err = db.Ping()
-	require.NoError(t, err)
-
-	ctx := context.Background()
-	rds := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-	t.Cleanup(func() {
-		err := rds.Close()
-		require.NoError(t, err)
-	})
-
-	_, err = rds.Ping(ctx).Result()
-	require.NoError(t, err)
-	return db, rds
-}
-
 func TestUserRepository_CreateUser(t *testing.T) {
-	db, rds := UserConnection(t)
+	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	user := entity.User{
 		Email:            uuid.NewString(),
@@ -68,7 +37,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
 }
 
 func TestUserRepository_GetUserByID_Error(t *testing.T) {
-	db, rds := UserConnection(t)
+	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 	_, err := ur.GetUserByID(ctx, 1234)
@@ -76,7 +45,7 @@ func TestUserRepository_GetUserByID_Error(t *testing.T) {
 }
 
 func TestUserRepository_UserByLogin(t *testing.T) {
-	db, rds := UserConnection(t)
+	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 
@@ -97,7 +66,7 @@ func TestUserRepository_UserByLogin(t *testing.T) {
 }
 
 func TestUserRepository_Verification(t *testing.T) {
-	db, rds := UserConnection(t)
+	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 	user := entity.User{
@@ -132,7 +101,7 @@ func TestUserRepository_Verification(t *testing.T) {
 }
 
 func TestUserRepository_SaveSession(t *testing.T) {
-	db, rds := UserConnection(t)
+	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 	session := uuid.New()
@@ -150,7 +119,7 @@ func TestUserRepository_SaveSession(t *testing.T) {
 	require.Equal(t, user, userS)
 }
 func TestUserRepository_SaveSessionFromCache(t *testing.T) {
-	db, rds := UserConnection(t)
+	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 	session := uuid.New()
@@ -169,7 +138,7 @@ func TestUserRepository_SaveSessionFromCache(t *testing.T) {
 }
 
 func TestUserRepository_GetSession_Error(t *testing.T) {
-	db, rds := UserConnection(t)
+	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 
@@ -178,7 +147,7 @@ func TestUserRepository_GetSession_Error(t *testing.T) {
 }
 
 func TestUserRepository_GetSessionFromCache_Error(t *testing.T) {
-	db, rds := UserConnection(t)
+	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 
@@ -187,7 +156,7 @@ func TestUserRepository_GetSessionFromCache_Error(t *testing.T) {
 }
 
 func TestUserRepository_UpdateVerificationCode(t *testing.T) {
-	db, rds := UserConnection(t)
+	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 
