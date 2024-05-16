@@ -28,7 +28,8 @@ require (
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	google.golang.org/grpc v1.62.1 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,17 +35,32 @@ type UserRepository interface {
 	SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error
 }
 
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err
+}
+
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
+	passwordHach, err := HashPassword(password)
+	if err != nil {
+		return err
+	}
+
 	user := entity.User{
 		Email:            login,
-		Password:         password,
+		Password:         passwordHach,
 		CreatedAt:        time.Now(),
 		Role:             entity.RoleUser,
 		Verification:     false,
 		VerificationCode: uuid.NewString(),
 	}
 
-	err := user.Validate()
+	err = user.Validate()
 	if err != nil {
 		return err
 	}
@@ -81,9 +97,12 @@ func (u *UserService) Login(ctx context.Context, login, password string) (uuid.U
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("get user by login: %w", err)
 	}
-	if user.Password != password {
+
+	err = CheckPasswordHash(password, user.Password)
+	if err != nil {
 		return uuid.UUID{}, entity.ErrNotAuthenticated
 	}
+
 	if !user.Verification {
 		return uuid.UUID{}, entity.ErrNotVerification
 	}
