@@ -4,7 +4,7 @@ ALTER TABLE sessions ADD column created_at timestamptz;
 
 CREATE TABLE absence_reminder_messages
 (
-    user_id BIGINT PRIMARY KEY REFERENCES users (id)ON DELETE CASCADE  NOT NULL,
+    user_id BIGINT PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE  NOT NULL,
     created_at timestamp NOT NULL
 );
 
