@@ -136,13 +136,14 @@ func TestUserRepository_SaveSession(t *testing.T) {
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 	session := uuid.New()
+	createdAtSession := time.Now()
 	user := entity.User{
 		ID:       int64(1),
 		Email:    uuid.New().String(),
 		Password: uuid.New().String(),
 		Role:     "user",
 	}
-	err := ur.SaveSession(ctx, session, user)
+	err := ur.SaveSession(ctx, session, user, createdAtSession)
 	require.NoError(t, err)
 
 	userS, err := ur.GetSession(ctx, session)

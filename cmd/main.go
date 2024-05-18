@@ -162,6 +162,17 @@ func main() {
 		}
 	}()
 
+	go func() {
+		for {
+			logger.Info("started SendAnAbsenceLetter job")
+			err = su.SendAnAbsenceLetter(ctx, cfg.IntervalTime)
+			if err != nil {
+				logger.Error("send absence reminder", "error", err)
+			}
+			time.Sleep(time.Minute)
+		}
+	}()
+
 	logger.Info(fmt.Sprintf("start http server at port: %v", cfg.Port))
 
 	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), router)

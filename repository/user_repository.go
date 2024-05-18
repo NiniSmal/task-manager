@@ -16,16 +16,6 @@ type UserRepository struct {
 	rds *redis.Client
 }
 
-func (r *UserRepository) UsersToSendAuth(ctx context.Context) ([]entity.User, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *UserRepository) SaveSendAbsenceReminder(ctx context.Context, userID int64, createdAT time.Time) error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func NewUserRepository(db *sql.DB, rds *redis.Client) *UserRepository {
 	return &UserRepository{
 		db:  db,
@@ -55,10 +45,10 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (entity.User
 	return user, nil
 }
 
-func (r *UserRepository) SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User) error {
-	query := "INSERT INTO sessions (id, user_id) VALUES ($1, $2)"
+func (r *UserRepository) SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User, createdAtSession time.Time) error {
+	query := "INSERT INTO sessions (id, user_id, created_at) VALUES ($1, $2, $3)"
 
-	_, err := r.db.ExecContext(ctx, query, sessionID, user.ID)
+	_, err := r.db.ExecContext(ctx, query, sessionID, user.ID, createdAtSession)
 	if err != nil {
 		return err
 	}
@@ -174,6 +164,39 @@ WHERE u.created_at < now() - INTERVAL '1 month' AND vm.created_at IS NULL`
 
 func (r *UserRepository) SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error {
 	query := "INSERT INTO vip_messages(user_id, created_at) VALUES($1, $2)"
+	_, err := r.db.ExecContext(ctx, query, userID, createdAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *UserRepository) UsersToSendAuth(ctx context.Context) ([]entity.User, error) {
+	query := `SELECT u.id, u.email, u.created_at, u.role, u.verification, u.verification_code 
+FROM users u JOIN sessions ss ON u.id = ss.user_id 
+WHERE ss.created_at < now() - INTERVAL ' 1 days' `
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []entity.User
+	for rows.Next() {
+		var user entity.User
+
+		err = rows.Scan(&user.ID, &user.Email, &user.CreatedAt, &user.Role, &user.Verification, &user.VerificationCode)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func (r *UserRepository) SaveSendAbsenceReminder(ctx context.Context, userID int64, createdAt time.Time) error {
+	query := "INSERT INTO absence_reminder_messages(user_id, created_at) VALUES ($1, $2)"
 	_, err := r.db.ExecContext(ctx, query, userID, createdAt)
 	if err != nil {
 		return err
