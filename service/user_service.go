@@ -35,25 +35,29 @@ type UserRepository interface {
 	SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error
 }
 
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
-func CheckPasswordHash(password, hash string) error {
+func checkPasswordHash(password, hash string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err
 }
 
 func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
-	passwordHach, err := HashPassword(password)
-	if err != nil {
-		return err
+	_, err := u.repo.UserByEmail(ctx, login)
+	if err == nil {
+		return entity.ErrEmailExists
+	}
+
+	if !errors.Is(err, entity.ErrNotFound) {
+		return fmt.Errorf("get user by login: %w", err)
 	}
 
 	user := entity.User{
 		Email:            login,
-		Password:         passwordHach,
+		Password:         password,
 		CreatedAt:        time.Now(),
 		Role:             entity.RoleUser,
 		Verification:     false,
@@ -64,20 +68,16 @@ func (u *UserService) CreateUser(ctx context.Context, login, password string) er
 	if err != nil {
 		return err
 	}
-
-	_, err = u.repo.UserByEmail(ctx, login)
-	if err == nil {
-		return entity.ErrEmailExists
-	}
-
-	if !errors.Is(err, entity.ErrNotFound) {
-		return fmt.Errorf("get user by login: %w", err)
+	user.Password, err = hashPassword(password)
+	if err != nil {
+		return err
 	}
 
 	_, err = u.repo.CreateUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
 	}
+
 	email := Email{
 		Text:    u.appURL + "/verification?code=" + user.VerificationCode,
 		To:      user.Email,
@@ -98,7 +98,7 @@ func (u *UserService) Login(ctx context.Context, login, password string) (uuid.U
 		return uuid.UUID{}, fmt.Errorf("get user by login: %w", err)
 	}
 
-	err = CheckPasswordHash(password, user.Password)
+	err = checkPasswordHash(password, user.Password)
 	if err != nil {
 		return uuid.UUID{}, entity.ErrNotAuthenticated
 	}
