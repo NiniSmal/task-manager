@@ -139,10 +139,10 @@ func (r *UserRepository) getSessionFromCache(ctx context.Context, sessionID uuid
 
 func (r *UserRepository) UsersToSendVIP(ctx context.Context) ([]entity.User, error) {
 	query := `SELECT u.id, u.email, u.created_at, u.role, u.verification, u.verification_code 
-FROM users u LEFT JOIN vip_messages vm ON vm.user_id = u.id 
-WHERE u.created_at < now() - INTERVAL '1 month' AND vm.created_at IS NULL`
+FROM users u LEFT JOIN messages m ON m.user_id = u.id 
+WHERE u.created_at < now() - INTERVAL '1 month' AND m.created_at IS NULL AND m.message_type =$1`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.QueryContext(ctx, query, "VIP message")
 	if err != nil {
 		return nil, err
 	}
@@ -163,8 +163,8 @@ WHERE u.created_at < now() - INTERVAL '1 month' AND vm.created_at IS NULL`
 }
 
 func (r *UserRepository) SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error {
-	query := "INSERT INTO vip_messages(user_id, created_at) VALUES($1, $2)"
-	_, err := r.db.ExecContext(ctx, query, userID, createdAt)
+	query := "INSERT INTO messages(user_id, message_type, created_at) VALUES($1, $2, $3)"
+	_, err := r.db.ExecContext(ctx, query, userID, "VIP message", createdAt)
 	if err != nil {
 		return err
 	}
@@ -173,9 +173,9 @@ func (r *UserRepository) SaveVIPMessage(ctx context.Context, userID int64, creat
 
 func (r *UserRepository) UsersToSendAuth(ctx context.Context) ([]entity.User, error) {
 	query := `SELECT u.id, u.email, u.created_at, u.role, u.verification, u.verification_code 
-FROM users u JOIN sessions ss ON u.id = ss.user_id 
-WHERE ss.created_at < now() - INTERVAL ' 1 days' `
-	rows, err := r.db.QueryContext(ctx, query)
+FROM users u LEFT JOIN session m ON u.id = m.user_id 
+WHERE m.created_at < now() - INTERVAL '1 month' AND m.created_at IS NULL AND m.message_type = $1`
+	rows, err := r.db.QueryContext(ctx, query, "absence message")
 	if err != nil {
 		return nil, err
 	}
@@ -196,8 +196,8 @@ WHERE ss.created_at < now() - INTERVAL ' 1 days' `
 }
 
 func (r *UserRepository) SaveSendAbsenceReminder(ctx context.Context, userID int64, createdAt time.Time) error {
-	query := "INSERT INTO absence_reminder_messages(user_id, created_at) VALUES ($1, $2)"
-	_, err := r.db.ExecContext(ctx, query, userID, createdAt)
+	query := "INSERT INTO messages(user_id, message_type, created_at) VALUES ($1, $2, $3)"
+	_, err := r.db.ExecContext(ctx, query, userID, "absence message", createdAt)
 	if err != nil {
 		return err
 	}
