@@ -172,9 +172,12 @@ func (r *UserRepository) SaveVIPMessage(ctx context.Context, userID int64, creat
 }
 
 func (r *UserRepository) UsersToSendAuth(ctx context.Context) ([]entity.User, error) {
-	query := `SELECT u.id, u.email, u.created_at, u.role, u.verification, u.verification_code 
-FROM users u LEFT JOIN session m ON u.id = m.user_id 
-WHERE m.created_at < now() - INTERVAL '1 month' AND m.created_at IS NULL AND m.message_type = $1`
+	query := `SELECT u.id, u.email, u.created_at, u.role, u.verification, u.verification_code
+FROM users u
+    LEFT JOIN messages m ON u.id = m.user_id
+    JOIN sessions ss ON u.id = ss.user_id
+WHERE ss.created_at < now() - INTERVAL '1 month'
+  AND  m.message_type != 'absence message' OR m.message_type IS NULL`
 	rows, err := r.db.QueryContext(ctx, query, "absence message")
 	if err != nil {
 		return nil, err
