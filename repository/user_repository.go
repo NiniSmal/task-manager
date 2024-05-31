@@ -181,7 +181,7 @@ FROM users AS u
     LEFT JOIN messages AS m ON u.id = m.user_id
     JOIN sessions AS ss ON u.id = ss.user_id
 WHERE ss.created_at < NOW() - INTERVAL '1 month'
-  AND m.message_type != 'absence message' OR m.message_type IS NULL`
+  AND m.message_type != $1 OR m.message_type IS NULL`
 
 	rows, err := r.db.QueryContext(ctx, query, "absence message")
 	if err != nil {
