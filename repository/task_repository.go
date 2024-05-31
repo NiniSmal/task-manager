@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
 	"github.com/redis/go-redis/v9"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
@@ -22,7 +23,8 @@ func NewTaskRepository(db *sql.DB, rds *redis.Client) *TaskRepository {
 func (r *TaskRepository) Create(ctx context.Context, task entity.Task) (entity.Task, error) {
 	query := "INSERT INTO tasks ( name, description, status, created_at, user_id, project_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
 
-	err := r.db.QueryRowContext(ctx, query, task.Name, task.Description, task.Status, task.CreatedAt, task.UserID, task.ProjectID).Scan(&task.ID)
+	err := r.db.QueryRowContext(ctx, query, task.Name, task.Description, task.Status, task.CreatedAt, task.UserID,
+		task.ProjectID).Scan(&task.ID)
 	if err != nil {
 		return entity.Task{}, err
 	}
@@ -35,7 +37,8 @@ func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error
 
 	var task entity.Task
 
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&task.ID, &task.Name, &task.Description, &task.Status, &task.CreatedAt, &task.UserID, &task.ProjectID)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&task.ID, &task.Name, &task.Description, &task.Status, &task.CreatedAt, &task.UserID,
+		&task.ProjectID)
 	if err != nil {
 		return entity.Task{}, err
 	}
@@ -44,7 +47,7 @@ func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error
 }
 
 func (r *TaskRepository) Tasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
-	query := "SELECT id, name, description, status, created_at, project_id, user_id FROM tasks"
+	query := "SELECT t.id, t.name, t.description, t.status, t.created_at, t.project_id, t.user_id FROM tasks AS t"
 
 	query, args := applyTaskFilter(query, f)
 	query += " ORDER BY created_at DESC"

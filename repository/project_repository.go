@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
 	"github.com/redis/go-redis/v9"
 	"gitlab.com/nina8884807/task-manager/entity"
 )
@@ -60,12 +61,12 @@ func (p *ProjectRepository) ProjectByID(ctx context.Context, id int64) (entity.P
 }
 
 func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error) {
-	query := "SELECT id, name, created_at, updated_at, user_id FROM projects"
+	query := "SELECT p.id, p.name, p.created_at, p.updated_at, p.user_id FROM projects AS p"
 
 	var projects []entity.Project
 
 	if filter.UserID != 0 {
-		query += fmt.Sprintf(" WHERE user_id = %d", filter.UserID)
+		query += fmt.Sprintf("JOIN user_projects AS up ON up.project_id = p.id WHERE up.user_id = %d", filter.UserID)
 	}
 
 	rows, err := p.db.QueryContext(ctx, query)
