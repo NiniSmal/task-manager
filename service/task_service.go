@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/segmentio/kafka-go"
 	"log/slog"
+	"strconv"
 	"time"
+
+	"github.com/segmentio/kafka-go"
 
 	"gitlab.com/nina8884807/task-manager/entity"
 )
@@ -131,6 +133,13 @@ func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error
 }
 
 func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
+	user, ok := ctx.Value("user").(entity.User)
+	if !ok {
+		return nil, entity.ErrNotAuthenticated
+	}
+
+	f.UserID = strconv.FormatInt(user.ID, 10)
+
 	tasks, err := s.tasks.Tasks(ctx, f)
 	if err != nil {
 		return nil, fmt.Errorf("get all tasks: %w", err)

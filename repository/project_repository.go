@@ -66,7 +66,7 @@ func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectF
 	var projects []entity.Project
 
 	if filter.UserID != 0 {
-		query += fmt.Sprintf("JOIN user_projects AS up ON up.project_id = p.id WHERE up.user_id = %d", filter.UserID)
+		query += fmt.Sprintf(" JOIN user_projects AS up ON up.project_id = p.id WHERE up.user_id = %d", filter.UserID)
 	}
 
 	rows, err := p.db.QueryContext(ctx, query)

@@ -583,11 +583,11 @@ paths:
             schema:
               type: object
               properties:
-                project ID:
+                project_id:
                   type: integer
                   format: int64
                   example: 15
-                user email:
+                user_email:
                   type: string
                   example: 'nina@mail.ru'
                   format: email
