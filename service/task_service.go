@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strconv"
 	"time"
 
@@ -48,9 +49,10 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) (entity.Tas
 		return entity.Task{}, err
 	}
 
-	err = isUserInProject(users, user.ID)
-	if err != nil {
-		return entity.Task{}, err
+	if !slices.ContainsFunc(users, func(u entity.User) bool {
+		return u.ID == user.ID
+	}) {
+		return entity.Task{}, fmt.Errorf("user %d is not a member of project %d", user.ID, task.ProjectID)
 	}
 
 	task.Status = entity.StatusNotDone
@@ -104,15 +106,6 @@ func (s *TaskService) sendCreateTaskNotification(ctx context.Context, projectID 
 	}
 
 	return nil
-}
-
-func isUserInProject(users []entity.User, id int64) error {
-	for _, userM := range users {
-		if userM.ID == id {
-			return nil
-		}
-	}
-	return entity.ErrForbidden
 }
 
 func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error) {
