@@ -131,10 +131,6 @@ func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]e
 		return nil, entity.ErrNotAuthenticated
 	}
 
-	if f.UserID == "" {
-		f.UserID = strconv.FormatInt(user.ID, 10)
-	}
-
 	projectID, err := strconv.ParseInt(f.ProjectID, 10, 64)
 	if err != nil {
 		return nil, fmt.Errorf("parse project id: %w", err)
