@@ -123,6 +123,7 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	filter := entity.TaskFilter{
+		UserID:    r.URL.Query().Get("user_id"),
 		ProjectID: r.URL.Query().Get("project_id"),
 	}
 

@@ -63,25 +63,20 @@ func (p *ProjectService) ProjectByID(ctx context.Context, projectID int64) (enti
 		return entity.Project{}, fmt.Errorf("get project by id %d :%w", projectID, err)
 	}
 
-	projectUers, err := p.repo.ProjectUsers(ctx, projectID)
+	projectUsers, err := p.repo.ProjectUsers(ctx, projectID)
 	if err != nil {
 		return entity.Project{}, fmt.Errorf("get project %d members: %w", projectID, err)
 	}
 
+	project.Members = projectUsers
+
 	user := ctx.Value("user").(entity.User)
 
-	if user.Role != entity.RoleAdmin && !slices.ContainsFunc(projectUers, func(u entity.User) bool {
+	if user.Role != entity.RoleAdmin && !slices.ContainsFunc(projectUsers, func(u entity.User) bool {
 		return u.ID == user.ID
 	}) {
 		return entity.Project{}, fmt.Errorf("get project by id %d :%w", projectID, entity.ErrForbidden)
 	}
-
-	members, err := p.repo.ProjectUsers(ctx, projectID)
-	if err != nil {
-		return entity.Project{}, fmt.Errorf("get project %d members: %w", projectID, err)
-	}
-
-	project.Members = members
 
 	return project, nil
 }
