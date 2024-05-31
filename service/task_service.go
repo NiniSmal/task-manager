@@ -131,20 +131,22 @@ func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]e
 		return nil, entity.ErrNotAuthenticated
 	}
 
-	projectID, err := strconv.ParseInt(f.ProjectID, 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("parse project id: %w", err)
-	}
+	if f.ProjectID != "" {
+		projectID, err := strconv.ParseInt(f.ProjectID, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("parse project id: %w", err)
+		}
 
-	users, err := s.projects.ProjectUsers(ctx, projectID)
-	if err != nil {
-		return nil, fmt.Errorf("get project users: %w", err)
-	}
+		users, err := s.projects.ProjectUsers(ctx, projectID)
+		if err != nil {
+			return nil, fmt.Errorf("get project users: %w", err)
+		}
 
-	if !slices.ContainsFunc(users, func(u entity.User) bool {
-		return u.ID == user.ID
-	}) {
-		return nil, fmt.Errorf("user %d is not a member of project %d", user.ID, projectID)
+		if !slices.ContainsFunc(users, func(u entity.User) bool {
+			return u.ID == user.ID
+		}) {
+			return nil, fmt.Errorf("user %d is not a member of project %d", user.ID, projectID)
+		}
 	}
 
 	tasks, err := s.tasks.Tasks(ctx, f)
