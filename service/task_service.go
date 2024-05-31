@@ -148,7 +148,7 @@ func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]e
 	if !slices.ContainsFunc(users, func(u entity.User) bool {
 		return u.ID == user.ID
 	}) {
-		return nil, fmt.Errorf("user %d is not a member of project %d", user.ID, f.ProjectID)
+		return nil, fmt.Errorf("user %d is not a member of project %d", user.ID, projectID)
 	}
 
 	tasks, err := s.tasks.Tasks(ctx, f)

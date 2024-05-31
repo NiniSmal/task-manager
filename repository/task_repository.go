@@ -78,14 +78,14 @@ func applyTaskFilter(query string, f entity.TaskFilter) (string, []any) {
 
 	if f.UserID != "" {
 		args = append(args, f.UserID)
-		where += fmt.Sprintf("user_id = $%d", len(args))
+		where += fmt.Sprintf("t.user_id = $%d", len(args))
 	}
 	if f.ProjectID != "" {
 		args = append(args, f.ProjectID)
 		if where != "" {
 			where += " AND "
 		}
-		where += fmt.Sprintf("project_id = $%d", len(args))
+		where += fmt.Sprintf("t.project_id = $%d", len(args))
 	}
 	if where != "" {
 		query += " WHERE " + where
