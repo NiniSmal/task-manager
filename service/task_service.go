@@ -61,8 +61,8 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) (entity.Tas
 	task.CreatedAt = time.Now()
 	task.UserID = user.ID
 
-	if task.ExecutorID == 0 {
-		task.ExecutorID = user.ID
+	if task.AssignerID == 0 {
+		task.AssignerID = user.ID
 	}
 
 	taskDB, err := s.tasks.Create(ctx, task)
@@ -165,12 +165,13 @@ func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]e
 func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) (entity.Task, error) {
 	user := ctx.Value("user").(entity.User)
 
-	if task.Status != entity.StatusDone && task.Status != entity.StatusNotDone {
-		return entity.Task{}, fmt.Errorf("update task: %w", entity.ErrForbidden)
+	_, ok := entity.Statuses[task.Status]
+	if !ok {
+		return entity.Task{}, fmt.Errorf("update task: %w", entity.ErrValidate)
 	}
 
-	if task.ExecutorID == 0 {
-		task.ExecutorID = user.ID
+	if task.AssignerID == 0 {
+		task.AssignerID = user.ID
 	}
 
 	members, err := s.projects.ProjectUsers(ctx, task.ProjectID)

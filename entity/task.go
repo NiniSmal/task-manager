@@ -13,9 +13,16 @@ const (
 )
 
 const (
-	StatusNotDone = "not_done"
-	StatusDone    = "done"
+	StatusNotDone    = "not_done"
+	StatusDone       = "done"
+	StatusInProgress = "in_progress"
 )
+
+var Statuses = map[string]struct{}{
+	StatusNotDone:    {},
+	StatusDone:       {},
+	StatusInProgress: {},
+}
 
 type Task struct {
 	ID          int64     `json:"id"`
@@ -25,7 +32,7 @@ type Task struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UserID      int64     `json:"user_id"`
 	ProjectID   int64     `json:"project_id"`
-	ExecutorID  int64     `json:"assigner_id"`
+	AssignerID  int64     `json:"assigner_id"`
 }
 
 type UpdateTask struct {
@@ -34,7 +41,7 @@ type UpdateTask struct {
 	Status      string `json:"status"`
 	UserID      int64  `json:"user_id"`
 	ProjectID   int64  `json:"project_id"`
-	ExecutorID  int64  `json:"assigner_id"`
+	AssignerID  int64  `json:"assigner_id"`
 }
 
 type TaskFilter struct {

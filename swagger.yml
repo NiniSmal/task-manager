@@ -51,6 +51,7 @@ paths:
                       enum:
                         - not_done
                         - done
+                        - in_progress
                     created_at:
                       type: string
                       format: date-time
@@ -62,6 +63,10 @@ paths:
                       type: integer
                       format: int64
                       example: 10
+                    assigner_id:
+                      type: integer
+                      format: int64
+                      example: 11
 
     post:
       summary: Create a new task
@@ -87,6 +92,7 @@ paths:
                   enum:
                     - not_done
                     - done
+                    - in_progress
                 created_at:
                   type: string
                   format: date-time
@@ -98,6 +104,10 @@ paths:
                   type: integer
                   format: int64
                   example: 10
+                assigner_id:
+                  type: integer
+                  format: int64
+                  example: 11
 
       responses:
         '200':
@@ -123,7 +133,8 @@ paths:
                       type: string
                       enum:
                         - done
-                        - not done
+                        - not_done
+                        - in_progress
                     created_at:
                       type: string
                       format: date-time
@@ -135,6 +146,10 @@ paths:
                       type: integer
                       format: int64
                       example: 10
+                    assigner_id:
+                      type: integer
+                      format: int64
+                      example: 11
 
   /tasks/{id}:
     get:
@@ -174,6 +189,7 @@ paths:
                       enum:
                         - not_done
                         - done
+                        - in_progress
                     created_at:
                       type: string
                       format: date-time
@@ -185,6 +201,10 @@ paths:
                       type: integer
                       format: int64
                       example: 10
+                    assigner_id:
+                      type: integer
+                      format: int64
+                      example: 11
 
     put:
       summary: Update status task
@@ -207,6 +227,10 @@ paths:
                 status:
                   type: string
                   example: done
+                assigner_id:
+                  type: integer
+                  format: int64
+                  example: 11
       responses:
         '200':
           description: OK
@@ -228,7 +252,8 @@ paths:
                       type: string
                       enum:
                         - done
-                        - not done
+                        - not_done
+                        - in_progress
                     created_at:
                       type: string
                       format: date-time
@@ -243,6 +268,10 @@ paths:
                       type: integer
                       format: int64
                       example: 10
+                    assigner_id:
+                      type: integer
+                      format: int64
+                      example: 11
     delete:
       summary: Delete task
       tags:
