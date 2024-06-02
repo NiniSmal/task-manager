@@ -2,16 +2,17 @@ package repository
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
-	"gitlab.com/nina8884807/task-manager/entity"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
+	"gitlab.com/nina8884807/task-manager/entity"
 )
 
 func TestApplyTaskFilter(t *testing.T) {
-	wantQuery := "SELECT id FROM tasks WHERE user_id = $1 AND project_id = $2"
+	wantQuery := "SELECT id FROM tasks WHERE t.user_id = $1 AND t.project_id = $2"
 	wantArgs := []any{"3", "13"}
 
 	query := "SELECT id FROM tasks"

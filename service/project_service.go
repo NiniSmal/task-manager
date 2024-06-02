@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"slices"
+	"time"
+
 	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
-	"time"
 )
 
 type ProjectService struct {
@@ -61,17 +63,20 @@ func (p *ProjectService) ProjectByID(ctx context.Context, projectID int64) (enti
 		return entity.Project{}, fmt.Errorf("get project by id %d :%w", projectID, err)
 	}
 
-	user := ctx.Value("user").(entity.User)
-	if user.Role != entity.RoleAdmin && project.UserID != user.ID {
-		return entity.Project{}, fmt.Errorf("get project by id %d :%w", projectID, entity.ErrForbidden)
-	}
-
-	members, err := p.repo.ProjectUsers(ctx, projectID)
+	projectUsers, err := p.repo.ProjectUsers(ctx, projectID)
 	if err != nil {
 		return entity.Project{}, fmt.Errorf("get project %d members: %w", projectID, err)
 	}
 
-	project.Members = members
+	project.Members = projectUsers
+
+	user := ctx.Value("user").(entity.User)
+
+	if user.Role != entity.RoleAdmin && !slices.ContainsFunc(projectUsers, func(u entity.User) bool {
+		return u.ID == user.ID
+	}) {
+		return entity.Project{}, fmt.Errorf("get project by id %d :%w", projectID, entity.ErrForbidden)
+	}
 
 	return project, nil
 }

@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/go-chi/chi/v5"
-	"gitlab.com/nina8884807/task-manager/entity"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"gitlab.com/nina8884807/task-manager/entity"
 )
 
 type ProjectHandler struct {
@@ -158,6 +159,7 @@ func (p *ProjectHandler) AddProjectMember(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	http.Redirect(w, r, "https://tm.anaxita.ru/projects", http.StatusSeeOther)
 }
 
 func (p *ProjectHandler) UserProjects(w http.ResponseWriter, r *http.Request) {

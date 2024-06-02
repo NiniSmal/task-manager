@@ -128,7 +128,7 @@ func (u *UserHandler) Verification(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = fmt.Fprintln(w, "verification successful, now you can login")
+	http.Redirect(w, r, "https://tm.anaxita.ru/login", http.StatusSeeOther)
 }
 
 func (u *UserHandler) RepeatRequestVerification(w http.ResponseWriter, r *http.Request) {

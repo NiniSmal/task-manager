@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/segmentio/kafka-go"
 	"log/slog"
+	"slices"
+	"strconv"
 	"time"
+
+	"github.com/segmentio/kafka-go"
 
 	"gitlab.com/nina8884807/task-manager/entity"
 )
@@ -46,9 +49,10 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) (entity.Tas
 		return entity.Task{}, err
 	}
 
-	err = isUserInProject(users, user.ID)
-	if err != nil {
-		return entity.Task{}, err
+	if !slices.ContainsFunc(users, func(u entity.User) bool {
+		return u.ID == user.ID
+	}) {
+		return entity.Task{}, fmt.Errorf("user %d is not a member of project %d", user.ID, task.ProjectID)
 	}
 
 	task.Status = entity.StatusNotDone
@@ -104,15 +108,6 @@ func (s *TaskService) sendCreateTaskNotification(ctx context.Context, projectID 
 	return nil
 }
 
-func isUserInProject(users []entity.User, id int64) error {
-	for _, userM := range users {
-		if userM.ID == id {
-			return nil
-		}
-	}
-	return entity.ErrForbidden
-}
-
 func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error) {
 	user := ctx.Value("user").(entity.User)
 
@@ -131,6 +126,29 @@ func (s *TaskService) GetTask(ctx context.Context, id int64) (entity.Task, error
 }
 
 func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
+	user, ok := ctx.Value("user").(entity.User)
+	if !ok {
+		return nil, entity.ErrNotAuthenticated
+	}
+
+	if f.ProjectID != "" {
+		projectID, err := strconv.ParseInt(f.ProjectID, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("parse project id: %w", err)
+		}
+
+		users, err := s.projects.ProjectUsers(ctx, projectID)
+		if err != nil {
+			return nil, fmt.Errorf("get project users: %w", err)
+		}
+
+		if !slices.ContainsFunc(users, func(u entity.User) bool {
+			return u.ID == user.ID
+		}) {
+			return nil, fmt.Errorf("user %d is not a member of project %d", user.ID, projectID)
+		}
+	}
+
 	tasks, err := s.tasks.Tasks(ctx, f)
 	if err != nil {
 		return nil, fmt.Errorf("get all tasks: %w", err)
