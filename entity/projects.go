@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	minNameProject = 5
+	minNameProject = 1
 	maxNameProject = 200
 )
 

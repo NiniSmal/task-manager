@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	minNameTask = 5
+	minNameTask = 1
 	maxNameTask = 200
 )
 
