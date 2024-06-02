@@ -145,24 +145,27 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 		return entity.Task{}, fmt.Errorf("update task: %w", entity.ErrForbidden)
 	}
 
-	taskOld, err := s.tasks.ByID(ctx, id)
-	if err != nil {
-		return entity.Task{}, err
-	}
-
 	if user.Role == entity.RoleAdmin {
-		err = s.tasks.Update(ctx, id, task)
+		err := s.tasks.Update(ctx, id, task)
 		if err != nil {
 			return entity.Task{}, err
 		}
 	}
-	if user.ID == taskOld.UserID {
 
-		err = s.tasks.Update(ctx, id, task)
-		if err != nil {
-			return entity.Task{}, err
+	members, err := s.projects.ProjectUsers(ctx, task.ProjectID)
+	if err != nil {
+		return entity.Task{}, fmt.Errorf("get project users: %w", entity.ErrNotFound)
+	}
+
+	for _, us := range members {
+		if us.ID == user.ID {
+			err = s.tasks.Update(ctx, id, task)
+			if err != nil {
+				return entity.Task{}, err
+			}
 		}
 	}
+
 	taskUp, err := s.tasks.ByID(ctx, id)
 	return taskUp, nil
 }

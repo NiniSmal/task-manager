@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -27,17 +28,21 @@ type User struct {
 	Role             Role      `json:"role"`
 	Verification     bool      `json:"verification,omitempty"`
 	VerificationCode string    `json:"verification_code,omitempty"`
+	Photo            string    `json:"photo"`
 }
 
 func (user *User) Validate() error {
-	rl := utf8.RuneCountInString(user.Email)
+	userEmail := strings.TrimSpace(user.Email)
+	userPassword := strings.TrimSpace(user.Password)
+	rl := utf8.RuneCountInString(userEmail)
+
 	if rl < minLogin {
 		return fmt.Errorf("%w: the login must be minimum %d symbols", ErrValidate, minLogin)
 	}
 	if rl > maxLogin {
 		return fmt.Errorf("%w: the login can be max %d symbols", ErrValidate, maxLogin)
 	}
-	if user.Password == "" {
+	if userPassword == "" {
 		return fmt.Errorf("%w: the password can't be empty", ErrValidate)
 	}
 	return nil

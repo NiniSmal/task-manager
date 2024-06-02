@@ -26,7 +26,7 @@ func NewUserHandler(u UserService, appHost string) *UserHandler {
 }
 
 type UserService interface {
-	CreateUser(ctx context.Context, login, password string) error
+	CreateUser(ctx context.Context, login, password, photo string) error
 	Login(ctx context.Context, login, password string) (uuid.UUID, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) error
 	ResendVerificationCode(ctx context.Context, email string) error
@@ -44,7 +44,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = u.service.CreateUser(ctx, user.Email, user.Password)
+	err = u.service.CreateUser(ctx, user.Email, user.Password, user.Photo)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
@@ -78,9 +78,9 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Value: sessionID.String(),
 		Path:  "/",
 		// Domain:     u.appHost,
-		Expires:    time.Now().Add(time.Hour * 24 * 7),
+		Expires:    time.Now().Add(time.Hour * 24 * 30),
 		RawExpires: "",
-		MaxAge:     3600,
+		MaxAge:     86400 * 7,
 		Secure:     true,
 		HttpOnly:   true,
 		SameSite:   http.SameSiteNoneMode,

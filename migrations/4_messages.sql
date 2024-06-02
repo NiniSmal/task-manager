@@ -2,7 +2,7 @@
 
 CREATE TABLE messages
 (
-    user_id BIGINT  REFERENCES users (id)ON DELETE CASCADE  NOT NULL,
+    user_id BIGINT  REFERENCES users (id) ON DELETE CASCADE  NOT NULL,
     message_type TEXT NOT NULL,
     created_at timestamp NOT NULL,
     PRIMARY KEY (user_id, message_type)

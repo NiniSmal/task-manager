@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -40,7 +41,9 @@ type TaskFilter struct {
 }
 
 func (task *Task) Validate() error {
-	rt := utf8.RuneCountInString(task.Name)
+	taskName := strings.TrimSpace(task.Name)
+
+	rt := utf8.RuneCountInString(taskName)
 	if rt < minNameTask {
 		return fmt.Errorf("%w: the name task must be minimum %d symbols", ErrValidate, minNameTask)
 	}

@@ -65,7 +65,7 @@ func (r *UserRepository) saveSessionToCache(ctx context.Context, sessionID uuid.
 		return err
 	}
 
-	_, err = r.rds.Set(ctx, sessionID.String(), us, time.Hour).Result()
+	_, err = r.rds.Set(ctx, sessionID.String(), us, (time.Hour*24)*30).Result()
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ FROM users u
     LEFT JOIN messages m ON u.id = m.user_id
     JOIN sessions ss ON u.id = ss.user_id
 WHERE ss.created_at < now() - INTERVAL '1 month'
-  AND  m.message_type != 'absence message' OR m.message_type IS NULL`
+  AND  m.message_type != $1 OR m.message_type IS NULL`
 	rows, err := r.db.QueryContext(ctx, query, "absence message")
 	if err != nil {
 		return nil, err

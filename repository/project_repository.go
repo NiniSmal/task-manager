@@ -174,7 +174,7 @@ func (p *ProjectRepository) UserProjects(ctx context.Context, filter entity.Proj
 }
 
 func (p *ProjectRepository) ProjectUsers(ctx context.Context, projectID int64) ([]entity.User, error) {
-	query := "SELECT id, email,  created_at, role  FROM users  JOIN user_projects ON users.id = user_projects.user_id WHERE project_id = $1"
+	query := "SELECT u.id, u.email,  u.created_at, u.role  FROM users u JOIN user_projects up ON u.id = up.user_id WHERE up.project_id = $1"
 
 	rows, err := p.db.QueryContext(ctx, query, projectID)
 	if err != nil {

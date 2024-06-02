@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -25,7 +26,9 @@ type ProjectFilter struct {
 }
 
 func (project *Project) Validate() error {
-	rp := utf8.RuneCountInString(project.Name)
+	projectName := strings.TrimSpace(project.Name)
+
+	rp := utf8.RuneCountInString(projectName)
 	if rp < minNameProject {
 		return fmt.Errorf("%w: the name project must be minimum %d symbols", ErrValidate, minNameProject)
 	}

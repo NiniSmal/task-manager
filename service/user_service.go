@@ -47,7 +47,7 @@ func checkPasswordHash(password, hash string) error {
 	return err
 }
 
-func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
+func (u *UserService) CreateUser(ctx context.Context, login, password, photo string) error {
 	_, err := u.repo.UserByEmail(ctx, login)
 	if err == nil {
 		return entity.ErrEmailExists
