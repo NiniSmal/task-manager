@@ -162,16 +162,21 @@ func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]e
 	return tasks, nil
 }
 
-func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.UpdateTask) (entity.Task, error) {
+func (s *TaskService) UpdateTask(ctx context.Context, id int64, updateTask entity.UpdateTask) (entity.Task, error) {
 	user := ctx.Value("user").(entity.User)
 
-	_, ok := entity.Statuses[task.Status]
+	_, ok := entity.Statuses[updateTask.Status]
 	if !ok {
 		return entity.Task{}, fmt.Errorf("update task: %w", entity.ErrValidate)
 	}
 
-	if task.AssignerID == 0 {
-		task.AssignerID = user.ID
+	if updateTask.AssignerID == 0 {
+		updateTask.AssignerID = user.ID
+	}
+
+	task, err := s.tasks.ByID(ctx, id)
+	if err != nil {
+		return entity.Task{}, err
 	}
 
 	members, err := s.projects.ProjectUsers(ctx, task.ProjectID)
@@ -185,17 +190,17 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 		return entity.Task{}, fmt.Errorf("user %d is not a member of project %d", user.ID, task.ProjectID)
 	}
 
-	err = s.tasks.Update(ctx, id, task)
+	err = s.tasks.Update(ctx, id, updateTask)
 	if err != nil {
 		return entity.Task{}, fmt.Errorf("update task: %w", err)
 	}
 
-	taskUp, err := s.tasks.ByID(ctx, id)
+	task, err = s.tasks.ByID(ctx, id)
 	if err != nil {
 		return entity.Task{}, err
 	}
 
-	return taskUp, nil
+	return task, nil
 
 }
 

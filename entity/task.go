@@ -39,8 +39,6 @@ type UpdateTask struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Status      string `json:"status"`
-	UserID      int64  `json:"user_id"`
-	ProjectID   int64  `json:"project_id"`
 	AssignerID  int64  `json:"assigner_id"`
 }
 
