@@ -153,8 +153,6 @@ func TestTaskRepository_Update(t *testing.T) {
 		Name:        task.Name,
 		Description: task.Description,
 		Status:      "done",
-		UserID:      user.ID,
-		ProjectID:   projectDB.ID,
 	}
 
 	err = tr.Update(ctx, taskDB.ID, taskUp)
