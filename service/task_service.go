@@ -179,13 +179,15 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 		return entity.Task{}, fmt.Errorf("get project users: %w", entity.ErrNotFound)
 	}
 
-	for _, us := range members {
-		if us.ID == user.ID {
-			err = s.tasks.Update(ctx, id, task)
-			if err != nil {
-				return entity.Task{}, err
-			}
-		}
+	if !slices.ContainsFunc(members, func(u entity.User) bool {
+		return u.ID == user.ID
+	}) {
+		return entity.Task{}, fmt.Errorf("user %d is not a member of project %d", user.ID, task.ProjectID)
+	}
+
+	err = s.tasks.Update(ctx, id, task)
+	if err != nil {
+		return entity.Task{}, fmt.Errorf("update task: %w", err)
 	}
 
 	taskUp, err := s.tasks.ByID(ctx, id)
