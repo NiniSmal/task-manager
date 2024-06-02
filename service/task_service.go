@@ -162,7 +162,7 @@ func (s *TaskService) GetAllTasks(ctx context.Context, f entity.TaskFilter) ([]e
 	return tasks, nil
 }
 
-func (s *TaskService) UpdateTask(ctx context.Context, id int64, updateTask entity.UpdateTask) (entity.Task, error) {
+func (s *TaskService) UpdateTask(ctx context.Context, taskID int64, updateTask entity.UpdateTask) (entity.Task, error) {
 	user := ctx.Value("user").(entity.User)
 
 	_, ok := entity.Statuses[updateTask.Status]
@@ -174,28 +174,22 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, updateTask entit
 		updateTask.AssignerID = user.ID
 	}
 
-	task, err := s.tasks.ByID(ctx, id)
+	task, err := s.tasks.ByID(ctx, taskID)
 	if err != nil {
-		return entity.Task{}, err
+		return entity.Task{}, fmt.Errorf("get task by id %d: %w", taskID, err)
 	}
 
-	members, err := s.projects.ProjectUsers(ctx, task.ProjectID)
+	_, err = s.projects.ProjectByID(ctx, task.ProjectID)
 	if err != nil {
-		return entity.Task{}, fmt.Errorf("get project users: %w", entity.ErrNotFound)
+		return entity.Task{}, fmt.Errorf("get project by id %d: %w", task.ProjectID, err)
 	}
 
-	if !slices.ContainsFunc(members, func(u entity.User) bool {
-		return u.ID == user.ID
-	}) {
-		return entity.Task{}, fmt.Errorf("user %d is not a member of project %d", user.ID, task.ProjectID)
-	}
-
-	err = s.tasks.Update(ctx, id, updateTask)
+	err = s.tasks.Update(ctx, taskID, updateTask)
 	if err != nil {
 		return entity.Task{}, fmt.Errorf("update task: %w", err)
 	}
 
-	task, err = s.tasks.ByID(ctx, id)
+	task, err = s.tasks.ByID(ctx, taskID)
 	if err != nil {
 		return entity.Task{}, err
 	}

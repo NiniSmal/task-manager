@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
@@ -37,9 +38,20 @@ func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error
 
 	var task entity.Task
 
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&task.ID, &task.Name, &task.Description, &task.Status, &task.CreatedAt, &task.UserID,
-		&task.ProjectID, &task.AssignerID)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&task.ID,
+		&task.Name,
+		&task.Description,
+		&task.Status,
+		&task.CreatedAt,
+		&task.UserID,
+		&task.ProjectID,
+		&task.AssignerID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.Task{}, entity.ErrNotFound
+		}
+
 		return entity.Task{}, err
 	}
 
@@ -62,7 +74,8 @@ func (r *TaskRepository) Tasks(ctx context.Context, f entity.TaskFilter) ([]enti
 
 	for rows.Next() {
 		var task entity.Task
-		err = rows.Scan(&task.ID, &task.Name, &task.Description, &task.Status, &task.CreatedAt, &task.ProjectID, &task.UserID, &task.AssignerID)
+		err = rows.Scan(&task.ID, &task.Name, &task.Description, &task.Status, &task.CreatedAt, &task.ProjectID, &task.UserID,
+			&task.AssignerID)
 		if err != nil {
 			return nil, err
 		}
