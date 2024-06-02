@@ -114,7 +114,7 @@ func main() {
 	ss := service.NewSenderService(kafkaWriter)
 	su := service.NewUserService(ut, ss, cfg.AppURL)
 	sp := service.NewProjectService(rp, ss, cfg.AppURL, ut)
-	st := service.NewTaskService(rt, rp, kafkaWriter)
+	st := service.NewTaskService(rt, rp, ut, kafkaWriter)
 
 	hp := api.NewProjectHandler(sp)
 	ht := api.NewTaskHandler(st)

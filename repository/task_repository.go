@@ -21,10 +21,10 @@ func NewTaskRepository(db *sql.DB, rds *redis.Client) *TaskRepository {
 	}
 }
 func (r *TaskRepository) Create(ctx context.Context, task entity.Task) (entity.Task, error) {
-	query := "INSERT INTO tasks ( name, description, status, created_at, user_id, project_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
+	query := "INSERT INTO tasks ( name, description, status, created_at, user_id, project_id, assigner_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id"
 
 	err := r.db.QueryRowContext(ctx, query, task.Name, task.Description, task.Status, task.CreatedAt, task.UserID,
-		task.ProjectID).Scan(&task.ID)
+		task.ProjectID, task.ExecutorID).Scan(&task.ID)
 	if err != nil {
 		return entity.Task{}, err
 	}
@@ -33,12 +33,12 @@ func (r *TaskRepository) Create(ctx context.Context, task entity.Task) (entity.T
 }
 
 func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error) {
-	query := "SELECT id, name, description, status, created_at, user_id, project_id FROM tasks WHERE id = $1"
+	query := "SELECT id, name, description, status, created_at, user_id, project_id, assigner_id FROM tasks WHERE id = $1"
 
 	var task entity.Task
 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&task.ID, &task.Name, &task.Description, &task.Status, &task.CreatedAt, &task.UserID,
-		&task.ProjectID)
+		&task.ProjectID, &task.ExecutorID)
 	if err != nil {
 		return entity.Task{}, err
 	}
@@ -95,9 +95,9 @@ func applyTaskFilter(query string, f entity.TaskFilter) (string, []any) {
 }
 
 func (r *TaskRepository) Update(ctx context.Context, id int64, task entity.UpdateTask) error {
-	query := "UPDATE tasks SET name = $1, description = $2, status = $3 WHERE id = $4"
+	query := "UPDATE tasks SET name = $1, description = $2, status = $3, assigner_id = $4 WHERE id = $5"
 
-	_, err := r.db.ExecContext(ctx, query, task.Name, task.Description, task.Status, id)
+	_, err := r.db.ExecContext(ctx, query, task.Name, task.Description, task.Status, task.ExecutorID, id)
 	if err != nil {
 		return err
 	}

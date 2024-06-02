@@ -27,6 +27,7 @@ func NewUserService(r UserRepository, s *SenderService, appURL string) *UserServ
 
 type UserRepository interface {
 	CreateUser(ctx context.Context, user entity.User) (int64, error)
+	GetUserByID(ctx context.Context, id int64) (entity.User, error)
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User, createdAtSession time.Time) error
 	UserByEmail(ctx context.Context, login string) (entity.User, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) (int64, error)

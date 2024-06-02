@@ -17,13 +17,15 @@ import (
 type TaskService struct {
 	tasks    TaskRepository
 	projects ProjectRepository
+	users    UserRepository
 	kafka    *kafka.Writer
 }
 
-func NewTaskService(r TaskRepository, pr ProjectRepository, w *kafka.Writer) *TaskService {
+func NewTaskService(r TaskRepository, pr ProjectRepository, us UserRepository, w *kafka.Writer) *TaskService {
 	return &TaskService{
 		tasks:    r,
 		projects: pr,
+		users:    us,
 		kafka:    w,
 	}
 }
@@ -58,6 +60,10 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) (entity.Tas
 	task.Status = entity.StatusNotDone
 	task.CreatedAt = time.Now()
 	task.UserID = user.ID
+
+	if task.ExecutorID == 0 {
+		task.ExecutorID = user.ID
+	}
 
 	taskDB, err := s.tasks.Create(ctx, task)
 	if err != nil {
@@ -163,11 +169,8 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 		return entity.Task{}, fmt.Errorf("update task: %w", entity.ErrForbidden)
 	}
 
-	if user.Role == entity.RoleAdmin {
-		err := s.tasks.Update(ctx, id, task)
-		if err != nil {
-			return entity.Task{}, err
-		}
+	if task.ExecutorID == 0 {
+		task.ExecutorID = user.ID
 	}
 
 	members, err := s.projects.ProjectUsers(ctx, task.ProjectID)
@@ -185,7 +188,12 @@ func (s *TaskService) UpdateTask(ctx context.Context, id int64, task entity.Upda
 	}
 
 	taskUp, err := s.tasks.ByID(ctx, id)
+	if err != nil {
+		return entity.Task{}, err
+	}
+
 	return taskUp, nil
+
 }
 
 func (s *TaskService) Delete(ctx context.Context, id int64) error {
