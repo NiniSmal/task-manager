@@ -19,7 +19,7 @@ func TestProject_Validate(t *testing.T) {
 		},
 		{
 			name:      "short name",
-			project:   Project{Name: "step"},
+			project:   Project{Name: ""},
 			wantError: true,
 		},
 		{

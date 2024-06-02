@@ -19,7 +19,7 @@ func TestTask_Validate(t *testing.T) {
 		},
 		{
 			name:      "court name",
-			task:      Task{Name: "read"},
+			task:      Task{Name: ""},
 			wantError: true,
 		},
 		{
