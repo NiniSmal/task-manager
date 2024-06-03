@@ -4,6 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"log/slog"
+	"net/http"
+	"net/url"
+	"os"
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
@@ -13,12 +20,6 @@ import (
 	"gitlab.com/nina8884807/task-manager/config"
 	"gitlab.com/nina8884807/task-manager/repository"
 	"gitlab.com/nina8884807/task-manager/service"
-	"log"
-	"log/slog"
-	"net/http"
-	"net/url"
-	"os"
-	"time"
 )
 
 func main() {
@@ -34,7 +35,7 @@ func main() {
 
 	h := slog.Handler(slog.NewTextHandler(os.Stdout, nil))
 	if cfg.LogJson {
-		h = slog.NewTextHandler(os.Stdout, nil)
+		h = slog.NewJSONHandler(os.Stdout, nil)
 	}
 	logger := slog.New(h)
 
@@ -83,7 +84,8 @@ func main() {
 	defer connKafka.Close()
 
 	topicConfigs := []kafka.TopicConfig{
-		{Topic: cfg.KafkaTopicCreateUser,
+		{
+			Topic:             cfg.KafkaTopicCreateUser,
 			NumPartitions:     1,
 			ReplicationFactor: 1,
 		},
