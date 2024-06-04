@@ -172,6 +172,7 @@ func (u *UserHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var base64Encoding string
+
 	mimeType := http.DetectContentType(content)
 	switch mimeType {
 	case "image/jpeg":
@@ -184,8 +185,6 @@ func (u *UserHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	err = u.service.UploadPhoto(ctx, base64Encoding)
 	if err != nil {
 		HandlerError(ctx, w, err)
+		return
 	}
-
-	w.Write([]byte(base64Encoding))
-
 }

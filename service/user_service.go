@@ -205,13 +205,13 @@ func (u *UserService) SendAnAbsenceLetter(ctx context.Context, intervalTime stri
 	return nil
 }
 
-func (u *UserService) UploadPhoto(ctx context.Context, imageURL string) error {
+func (u *UserService) UploadPhoto(ctx context.Context, photo string) error {
 	user := ctx.Value("user").(entity.User)
 
-	err := u.repo.SavePhoto(ctx, imageURL, user.ID)
+	err := u.repo.SavePhoto(ctx, photo, user.ID)
 	if err != nil {
-		return fmt.Errorf("save photo: $w", err)
+		return fmt.Errorf("save photo: %w", err)
 	}
 
-	return err
+	return nil
 }

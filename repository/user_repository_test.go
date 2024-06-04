@@ -180,3 +180,25 @@ func TestUserRepository_UpdateVerificationCode(t *testing.T) {
 	require.Equal(t, code, user.VerificationCode)
 
 }
+func TestUserRepository_SavePhoto(t *testing.T) {
+	db, rds := DBConnection(t)
+	ur := NewUserRepository(db, rds)
+	ctx := context.Background()
+
+	user := entity.User{
+		Email:            uuid.New().String(),
+		Password:         uuid.New().String(),
+		CreatedAt:        time.Time{},
+		Role:             "user",
+		Verification:     false,
+		VerificationCode: "123",
+	}
+
+	id, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+
+	imageURL := uuid.NewString()
+
+	err = ur.SavePhoto(ctx, imageURL, id)
+	require.NoError(t, err)
+}
