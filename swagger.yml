@@ -356,6 +356,28 @@ paths:
       responses:
         '200':
           description: OK
+  /upload/photo:
+    post:
+      summary: Upload photo
+      tags:
+        - avatar
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: png
+                  example: pngegg.png
+                  format: binary
+        responses:
+          '200':
+            description: OK
+            content:
+              text/plain:
+                schema:
+                  type: string
 
 
   /verification:

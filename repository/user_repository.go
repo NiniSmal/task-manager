@@ -212,3 +212,13 @@ func (r *UserRepository) SaveSendAbsenceReminder(ctx context.Context, userID int
 	}
 	return nil
 }
+
+func (r *UserRepository) SavePhoto(ctx context.Context, imageURL string, userID int64) error {
+	query := "INSERT  INTO profiles (image_url, user_id) VALUES ($1, $2)"
+	_, err := r.db.ExecContext(ctx, query, imageURL, userID)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}

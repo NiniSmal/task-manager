@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -31,6 +33,7 @@ type UserService interface {
 	Verification(ctx context.Context, verificationCode string, verification bool) error
 	ResendVerificationCode(ctx context.Context, email string) error
 	SendAnAbsenceLetter(ctx context.Context, intervalTime string) error
+	UploadPhoto(ctx context.Context, imageURL string) error
 }
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -146,4 +149,43 @@ func (u *UserHandler) RepeatRequestVerification(w http.ResponseWriter, r *http.R
 		HandlerError(ctx, w, err)
 		return
 	}
+}
+
+type imageJSON struct {
+	Base64 string `json:"base64"`
+}
+
+func (u *UserHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+
+	var base64Encoding string
+	mimeType := http.DetectContentType(content)
+	switch mimeType {
+	case "image/jpeg":
+		base64Encoding += "data:image/jpeg;base64,"
+	case "image/png":
+		base64Encoding += "data:image/png;base64,"
+	}
+	base64Encoding += base64.StdEncoding.EncodeToString(content)
+
+	err = u.service.UploadPhoto(ctx, base64Encoding)
+	if err != nil {
+		HandlerError(ctx, w, err)
+	}
+
+	w.Write([]byte(base64Encoding))
+
 }

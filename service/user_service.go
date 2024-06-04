@@ -36,6 +36,7 @@ type UserRepository interface {
 	SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error
 	UsersToSendAuth(ctx context.Context) ([]entity.User, error)
 	SaveSendAbsenceReminder(ctx context.Context, userID int64, createdAT time.Time) error
+	SavePhoto(ctx context.Context, imageURL string, userID int64) error
 }
 
 func hashPassword(password string) (string, error) {
@@ -202,4 +203,15 @@ func (u *UserService) SendAnAbsenceLetter(ctx context.Context, intervalTime stri
 		}
 	}
 	return nil
+}
+
+func (u *UserService) UploadPhoto(ctx context.Context, imageURL string) error {
+	user := ctx.Value("user").(entity.User)
+
+	err := u.repo.SavePhoto(ctx, imageURL, user.ID)
+	if err != nil {
+		return fmt.Errorf("save photo: $w", err)
+	}
+
+	return err
 }

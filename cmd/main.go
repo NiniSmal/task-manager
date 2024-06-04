@@ -138,6 +138,7 @@ func main() {
 		r.Delete("/api/projects/{id}", hp.DeleteProject)
 		r.Get("/api/users/projects", hp.UserProjects)
 		r.Post("/api/projects/joining", hp.JoiningUsers)
+		r.Post("/api/upload/photo", hu.UploadPhoto)
 
 		r.Get("/api/tasks", ht.GetAllTasks)
 		r.Post("/api/tasks", ht.CreateTask)
