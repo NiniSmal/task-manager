@@ -38,7 +38,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user entity.User) (int6
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (entity.User, error) {
-	query := "SELECT email, password, created_at, role, verification, verification_code FROM users WHERE id = $1"
+	query := "SELECT email, password, created_at, role, verification, verification_code, photo_b64 FROM users WHERE id = $1"
 	var user entity.User
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&user.Email, &user.Password, &user.CreatedAt, &user.Role, &user.Verification,
 		&user.VerificationCode)
@@ -213,10 +213,10 @@ func (r *UserRepository) SaveSendAbsenceReminder(ctx context.Context, userID int
 	return nil
 }
 
-func (r *UserRepository) SavePhoto(ctx context.Context, imageURL string, userID int64) error {
-	query := "INSERT  INTO profiles (image_url, user_id) VALUES ($1, $2)"
+func (r *UserRepository) SavePhoto(ctx context.Context, photoB64 string, userID int64) error {
+	query := "INSERT  INTO profiles (photo_b64, user_id) VALUES ($1, $2)"
 
-	_, err := r.db.ExecContext(ctx, query, imageURL, userID)
+	_, err := r.db.ExecContext(ctx, query, photoB64, userID)
 	if err != nil {
 		return err
 	}
