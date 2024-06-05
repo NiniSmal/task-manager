@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -28,12 +30,14 @@ func NewUserHandler(u UserService, appHost string) *UserHandler {
 }
 
 type UserService interface {
-	CreateUser(ctx context.Context, login, password, photo string) error
+	CreateUser(ctx context.Context, login, password string) error
 	Login(ctx context.Context, login, password string) (uuid.UUID, error)
 	Verification(ctx context.Context, verificationCode string, verification bool) error
 	ResendVerificationCode(ctx context.Context, email string) error
 	SendAnAbsenceLetter(ctx context.Context, intervalTime string) error
 	UploadPhoto(ctx context.Context, imageURL string) error
+	UserByID(ctx context.Context, id int64) (entity.User, error)
+	Users(ctx context.Context) ([]entity.User, error)
 }
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +51,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = u.service.CreateUser(ctx, user.Email, user.Password, user.Photo)
+	err = u.service.CreateUser(ctx, user.Email, user.Password)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
@@ -183,6 +187,43 @@ func (u *UserHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	base64Encoding += base64.StdEncoding.EncodeToString(content)
 
 	err = u.service.UploadPhoto(ctx, base64Encoding)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+}
+
+func (u *UserHandler) UserByID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	idR := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idR, 10, 64)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+
+	user, err := u.service.UserByID(ctx, id)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+	err = sendJSON(w, user)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+}
+
+func (u *UserHandler) Users(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	users, err := u.service.Users(ctx)
+	if err != nil {
+		HandlerError(ctx, w, err)
+	}
+
+	err = sendJSON(w, users)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return

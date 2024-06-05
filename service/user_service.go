@@ -37,6 +37,7 @@ type UserRepository interface {
 	UsersToSendAuth(ctx context.Context) ([]entity.User, error)
 	SaveSendAbsenceReminder(ctx context.Context, userID int64, createdAT time.Time) error
 	SavePhoto(ctx context.Context, imageURL string, userID int64) error
+	Users(ctx context.Context) ([]entity.User, error)
 }
 
 func hashPassword(password string) (string, error) {
@@ -49,7 +50,7 @@ func checkPasswordHash(password, hash string) error {
 	return err
 }
 
-func (u *UserService) CreateUser(ctx context.Context, login, password, photo string) error {
+func (u *UserService) CreateUser(ctx context.Context, login, password string) error {
 	_, err := u.repo.UserByEmail(ctx, login)
 	if err == nil {
 		return entity.ErrEmailExists
@@ -214,4 +215,22 @@ func (u *UserService) UploadPhoto(ctx context.Context, photo string) error {
 	}
 
 	return nil
+}
+
+func (u *UserService) UserByID(ctx context.Context, id int64) (entity.User, error) {
+	user, err := u.repo.GetUserByID(ctx, id)
+	if err != nil {
+		return entity.User{}, fmt.Errorf("get user by id: %w", err)
+	}
+
+	return user, nil
+}
+
+func (u *UserService) Users(ctx context.Context) ([]entity.User, error) {
+	users, err := u.repo.Users(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get users: %w", err)
+	}
+
+	return users, nil
 }

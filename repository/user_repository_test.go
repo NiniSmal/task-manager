@@ -13,27 +13,26 @@ import (
 func TestUserRepository_CreateUser(t *testing.T) {
 	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
+	photo := uuid.NewString()
+
 	user := entity.User{
 		Email:            uuid.NewString(),
 		Password:         "123",
-		CreatedAt:        time.Now(),
+		CreatedAt:        time.Now().UTC().Round(time.Millisecond),
 		Role:             "user",
 		Verification:     true,
 		VerificationCode: "41c37c27-291b-477d-af8d-c162e0fa3e98",
+		Photo:            &photo,
 	}
 	ctx := context.Background()
 	id, err := ur.CreateUser(ctx, user)
 	require.NoError(t, err)
 
+	user.ID = id
+
 	dbUser, err := ur.GetUserByID(ctx, id)
 	require.NoError(t, err)
-	require.Equal(t, user.ID, dbUser.ID)
-	require.Equal(t, user.Email, dbUser.Email)
-	require.Equal(t, user.Password, dbUser.Password)
-	require.Equal(t, user.CreatedAt.Unix(), dbUser.CreatedAt.Unix())
-	require.Equal(t, user.Role, dbUser.Role)
-	require.Equal(t, user.Verification, dbUser.Verification)
-	require.Equal(t, user.VerificationCode, dbUser.VerificationCode)
+	require.Equal(t, user, dbUser)
 }
 
 func TestUserRepository_GetUserByID_Error(t *testing.T) {
@@ -91,6 +90,7 @@ func TestUserRepository_Verification(t *testing.T) {
 	dbID, err := ur.Verification(ctx, userUp.VerificationCode, userUp.Verification)
 	require.NoError(t, err)
 
+	user.ID = dbID
 	userDB, err := ur.GetUserByID(ctx, dbID)
 
 	require.NoError(t, err)
@@ -197,8 +197,43 @@ func TestUserRepository_SavePhoto(t *testing.T) {
 	id, err := ur.CreateUser(ctx, user)
 	require.NoError(t, err)
 
-	imageURL := uuid.NewString()
+	photo := uuid.NewString()
 
-	err = ur.SavePhoto(ctx, imageURL, id)
+	err = ur.SavePhoto(ctx, photo, id)
 	require.NoError(t, err)
+}
+
+func TestUserRepository_Users(t *testing.T) {
+	db, rds := DBConnection(t)
+	ur := NewUserRepository(db, rds)
+	ctx := context.Background()
+
+	users := []entity.User{
+		{Email: uuid.New().String(),
+			Password:         uuid.New().String(),
+			CreatedAt:        time.Time{},
+			Role:             "user",
+			Verification:     true,
+			VerificationCode: "123"},
+		{Email: uuid.New().String(),
+			Password:         uuid.New().String(),
+			CreatedAt:        time.Time{},
+			Role:             "user",
+			Verification:     true,
+			VerificationCode: "1234"},
+	}
+
+	for i, user := range users {
+		id, err := ur.CreateUser(ctx, user)
+		require.NoError(t, err)
+		users[i].ID = id
+		users[i].Password = ""
+	}
+
+	usersDB, err := ur.Users(ctx)
+	require.NoError(t, err)
+
+	for _, user := range users {
+		require.Contains(t, usersDB, user)
+	}
 }

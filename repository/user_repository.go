@@ -25,12 +25,22 @@ func NewUserRepository(db *sql.DB, rds *redis.Client) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(ctx context.Context, user entity.User) (int64, error) {
-	query := "INSERT INTO users ( email, password, created_at, role, verification, verification_code ) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
+	query := `INSERT INTO users ( email, password, created_at, role, verification, verification_code, photo)
+VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
 	var id int64
 
-	err := r.db.QueryRowContext(ctx, query, user.Email, user.Password, user.CreatedAt, user.Role, user.Verification,
-		user.VerificationCode).Scan(&id)
+	err := r.db.QueryRowContext(
+		ctx,
+		query,
+		user.Email,
+		user.Password,
+		user.CreatedAt,
+		user.Role,
+		user.Verification,
+		user.VerificationCode,
+		user.Photo,
+	).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -38,10 +48,18 @@ func (r *UserRepository) CreateUser(ctx context.Context, user entity.User) (int6
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (entity.User, error) {
-	query := "SELECT email, password, created_at, role, verification, verification_code, photo_b64 FROM users WHERE id = $1"
+	query := "SELECT id, email, password, created_at, role, verification, verification_code, photo FROM users WHERE id = $1"
 	var user entity.User
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&user.Email, &user.Password, &user.CreatedAt, &user.Role, &user.Verification,
-		&user.VerificationCode)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Password,
+		&user.CreatedAt,
+		&user.Role,
+		&user.Verification,
+		&user.VerificationCode,
+		&user.Photo,
+	)
 	if err != nil {
 		return entity.User{}, err
 	}
@@ -214,7 +232,7 @@ func (r *UserRepository) SaveSendAbsenceReminder(ctx context.Context, userID int
 }
 
 func (r *UserRepository) SavePhoto(ctx context.Context, photoB64 string, userID int64) error {
-	query := "INSERT  INTO profiles (photo_b64, user_id) VALUES ($1, $2)"
+	query := "UPDATE users SET photo = $1 WHERE id = $2"
 
 	_, err := r.db.ExecContext(ctx, query, photoB64, userID)
 	if err != nil {
@@ -222,4 +240,28 @@ func (r *UserRepository) SavePhoto(ctx context.Context, photoB64 string, userID 
 	}
 
 	return nil
+}
+
+func (r *UserRepository) Users(ctx context.Context) ([]entity.User, error) {
+	query := "SELECT id, email, created_at, role, verification, verification_code, photo FROM users"
+
+	var users []entity.User
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var user entity.User
+
+		err = rows.Scan(&user.ID, &user.Email, &user.CreatedAt, &user.Role, &user.Verification, &user.VerificationCode, &user.Photo)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }

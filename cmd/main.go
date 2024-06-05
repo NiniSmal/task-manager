@@ -139,6 +139,8 @@ func main() {
 		r.Get("/api/users/projects", hp.UserProjects)
 		r.Post("/api/projects/joining", hp.JoiningUsers)
 		r.Post("/api/upload/photo", hu.UploadPhoto)
+		r.Get("/api/users/{id}", hu.UserByID)
+		r.Get("/api/users", hu.Users)
 
 		r.Get("/api/tasks", ht.GetAllTasks)
 		r.Post("/api/tasks", ht.CreateTask)
