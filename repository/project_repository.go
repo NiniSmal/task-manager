@@ -48,7 +48,7 @@ func (p *ProjectRepository) SaveProject(ctx context.Context, project entity.Proj
 }
 
 func (p *ProjectRepository) ProjectByID(ctx context.Context, id int64) (entity.Project, error) {
-	query := "SELECT id, name, created_at, updated_at, user_id FROM projects WHERE id  = $1"
+	query := "SELECT id, name, created_at, updated_at, user_id FROM projects WHERE id  = $1 AND deleted_at IS NULL"
 
 	var project entity.Project
 
@@ -61,12 +61,12 @@ func (p *ProjectRepository) ProjectByID(ctx context.Context, id int64) (entity.P
 }
 
 func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error) {
-	query := "SELECT p.id, p.name, p.created_at, p.updated_at, p.user_id FROM projects AS p"
+	query := "SELECT p.id, p.name, p.created_at, p.updated_at, p.user_id FROM projects AS p "
 
 	var projects []entity.Project
 
 	if filter.UserID != 0 {
-		query += fmt.Sprintf(" JOIN user_projects AS up ON up.project_id = p.id WHERE up.user_id = %d", filter.UserID)
+		query += fmt.Sprintf(" JOIN user_projects AS up ON up.project_id = p.id WHERE up.user_id = %d  AND deleted_at IS NULL", filter.UserID)
 	}
 
 	rows, err := p.db.QueryContext(ctx, query)
@@ -91,7 +91,7 @@ func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectF
 }
 
 func (p *ProjectRepository) UpdateProject(ctx context.Context, id int64, project entity.Project) error {
-	query := "UPDATE projects SET name = $1, updated_at = $2 WHERE id = $3"
+	query := "UPDATE projects SET name = $1, updated_at = $2 WHERE id = $3 AND deleted_at IS NULL"
 
 	_, err := p.db.ExecContext(ctx, query, project.Name, project.UpdatedAt, id)
 	if err != nil {
@@ -100,10 +100,19 @@ func (p *ProjectRepository) UpdateProject(ctx context.Context, id int64, project
 	return nil
 }
 
-func (p *ProjectRepository) DeleteProject(ctx context.Context, id int64) error {
-	query := "DELETE FROM projects WHERE id = $1"
-
+func (p *ProjectRepository) SoftDeleteProject(ctx context.Context, id int64) error {
+	query := "UPDATE projects SET deleted_at = now() WHERE id = $1"
 	_, err := p.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *ProjectRepository) HardDeleteProjects(ctx context.Context) error {
+	query := "DELETE FROM projects WHERE deleted_at IS NOT NULL"
+	_, err := p.db.ExecContext(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -148,7 +157,7 @@ func (p *ProjectRepository) addProjectMembersByID(ctx context.Context, tx *sql.T
 }
 
 func (p *ProjectRepository) UserProjects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error) {
-	query := "SELECT p.id, p.name, p.created_at, p.updated_at, p.user_id FROM projects p  JOIN user_projects up  ON p.id = up.project_id"
+	query := "SELECT p.id, p.name, p.created_at, p.updated_at, p.user_id FROM projects p  JOIN user_projects up  ON p.id = up.project_id AND p.deleted_at IS NULL"
 
 	if filter.UserID != 0 {
 		query += fmt.Sprintf(" WHERE up.user_id = %d", filter.UserID)
@@ -175,7 +184,7 @@ func (p *ProjectRepository) UserProjects(ctx context.Context, filter entity.Proj
 }
 
 func (p *ProjectRepository) ProjectUsers(ctx context.Context, projectID int64) ([]entity.User, error) {
-	query := "SELECT u.id, u.email,  u.created_at, u.role  FROM users u JOIN user_projects up ON u.id = up.user_id WHERE up.project_id = $1"
+	query := "SELECT u.id, u.email,  u.created_at, u.role  FROM users u JOIN user_projects up ON u.id = up.user_id WHERE up.project_id = $1 "
 
 	rows, err := p.db.QueryContext(ctx, query, projectID)
 	if err != nil {

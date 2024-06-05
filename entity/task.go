@@ -33,13 +33,15 @@ type Task struct {
 	UserID      int64     `json:"user_id"`
 	ProjectID   int64     `json:"project_id"`
 	AssignerID  int64     `json:"assigner_id"`
+	DeletedAt   time.Time `json:"deleted_at"`
 }
 
 type UpdateTask struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
-	AssignerID  int64  `json:"assigner_id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Status      string    `json:"status"`
+	AssignerID  int64     `json:"assigner_id"`
+	DeletedAt   time.Time `json:"deleted_at"`
 }
 
 type TaskFilter struct {

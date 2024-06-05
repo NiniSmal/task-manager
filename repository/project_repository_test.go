@@ -240,3 +240,28 @@ func TestProjectRepository_Projects(t *testing.T) {
 		require.Contains(t, projectsDB, project)
 	}
 }
+
+func TestProjectRepository_SoftDeleteProject(t *testing.T) {
+	db, rds := DBConnection(t)
+	ur := NewUserRepository(db, rds)
+	pr := NewProjectRepository(db, rds)
+	ctx := context.Background()
+
+	user := entity.User{Email: uuid.NewString()}
+	userID, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+	user.ID = userID
+
+	project := entity.Project{
+		Name:   uuid.NewString(),
+		UserID: user.ID,
+	}
+	projectDB, err := pr.SaveProject(ctx, project)
+	require.NoError(t, err)
+
+	err = pr.SoftDeleteProject(ctx, projectDB.ID)
+	require.NoError(t, err)
+
+	_, err = pr.ProjectByID(ctx, projectDB.ID)
+	require.Error(t, err)
+}

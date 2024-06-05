@@ -32,7 +32,8 @@ type ProjectRepository interface {
 	Projects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error)
 	AddProjectMembers(ctx context.Context, code string) error
 	UpdateProject(ctx context.Context, id int64, project entity.Project) error
-	DeleteProject(ctx context.Context, id int64) error
+	SoftDeleteProject(ctx context.Context, id int64) error
+	HardDeleteProjects(ctx context.Context) error
 	UserProjects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error)
 	ProjectUsers(ctx context.Context, projectID int64) ([]entity.User, error)
 	JoiningUsers(ctx context.Context, projectID int64, userID int64, code string) error
@@ -165,7 +166,7 @@ func (p *ProjectService) UpdateProject(ctx context.Context, projectID int64, pro
 	return project, nil
 }
 
-func (p *ProjectService) DeleteProject(ctx context.Context, id int64) error {
+func (p *ProjectService) SoftDeleteProject(ctx context.Context, id int64) error {
 	user := ctx.Value("user").(entity.User)
 
 	projectOld, err := p.repo.ProjectByID(ctx, id)
@@ -177,9 +178,35 @@ func (p *ProjectService) DeleteProject(ctx context.Context, id int64) error {
 		return fmt.Errorf("delete project by id %d: %w", id, entity.ErrForbidden)
 	}
 
-	err = p.repo.DeleteProject(ctx, id)
+	err = p.repo.SoftDeleteProject(ctx, id)
 	if err != nil {
 		return fmt.Errorf("delete project by id %d: %w", id, err)
+	}
+
+	return nil
+}
+
+func (p *ProjectService) HardDeleteProjects(ctx context.Context) error {
+	user := ctx.Value("user").(entity.User)
+
+	var filter entity.ProjectFilter
+
+	if user.Role != entity.RoleAdmin {
+		filter.UserID = user.ID
+	}
+
+	projects, err := p.repo.UserProjects(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("get user projects: %w", err)
+	}
+
+	if user.Role != entity.RoleAdmin && user.ID != projects[1].UserID {
+		return fmt.Errorf("delete project: %w", entity.ErrForbidden)
+	}
+
+	err = p.repo.HardDeleteProjects(ctx)
+	if err != nil {
+		return err
 	}
 
 	return nil
