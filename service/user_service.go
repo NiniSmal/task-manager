@@ -38,6 +38,7 @@ type UserRepository interface {
 	SaveSendAbsenceReminder(ctx context.Context, userID int64, createdAT time.Time) error
 	SavePhoto(ctx context.Context, imageURL string, userID int64) error
 	Users(ctx context.Context) ([]entity.User, error)
+	DeleteUser(ctx context.Context, id int64) error
 }
 
 func hashPassword(password string) (string, error) {
@@ -233,4 +234,13 @@ func (u *UserService) Users(ctx context.Context) ([]entity.User, error) {
 	}
 
 	return users, nil
+}
+
+func (u *UserService) DeleteUser(ctx context.Context, id int64) error {
+	err := u.repo.DeleteUser(ctx, id)
+	if err != nil {
+		return fmt.Errorf("delete user: %w", err)
+	}
+
+	return nil
 }

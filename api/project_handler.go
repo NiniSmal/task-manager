@@ -26,8 +26,7 @@ type ProjectService interface {
 	ProjectByID(ctx context.Context, id int64) (entity.Project, error)
 	Projects(ctx context.Context) ([]entity.Project, error)
 	UpdateProject(ctx context.Context, id int64, project entity.Project) (entity.Project, error)
-	SoftDeleteProject(ctx context.Context, id int64) error
-	HardDeleteProjects(ctx context.Context) error
+	DeleteProject(ctx context.Context, id int64) error
 	AddProjectMembers(ctx context.Context, code string) error
 	UserProjects(ctx context.Context) ([]entity.Project, error)
 	JoiningUsers(ctx context.Context, projectID int64, userEmail string) error
@@ -125,7 +124,7 @@ func (p *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-func (p *ProjectHandler) SoftDeleteProject(w http.ResponseWriter, r *http.Request) {
+func (p *ProjectHandler) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	idR := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idR, 10, 64)
@@ -133,17 +132,7 @@ func (p *ProjectHandler) SoftDeleteProject(w http.ResponseWriter, r *http.Reques
 		HandlerError(ctx, w, err)
 		return
 	}
-	err = p.service.SoftDeleteProject(ctx, id)
-	if err != nil {
-		HandlerError(ctx, w, err)
-		return
-	}
-}
-
-func (p *ProjectHandler) HardDeleteProjects(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	err := p.service.HardDeleteProjects(ctx)
+	err = p.service.DeleteProject(ctx, id)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return

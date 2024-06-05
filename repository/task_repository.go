@@ -34,7 +34,7 @@ func (r *TaskRepository) Create(ctx context.Context, task entity.Task) (entity.T
 }
 
 func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error) {
-	query := "SELECT id, name, description, status, created_at, user_id, project_id, assigner_id FROM tasks WHERE id = $1 AND  deleted_at IS NULL"
+	query := "SELECT id, name, description, status, created_at, user_id, project_id, assigner_id FROM tasks WHERE id = $1 AND deleted_at IS NULL"
 
 	var task entity.Task
 
@@ -46,8 +46,7 @@ func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error
 		&task.CreatedAt,
 		&task.UserID,
 		&task.ProjectID,
-		&task.AssignerID,
-	)
+		&task.AssignerID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return entity.Task{}, entity.ErrNotFound
@@ -60,7 +59,7 @@ func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error
 }
 
 func (r *TaskRepository) Tasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
-	query := "SELECT t.id, t.name, t.description, t.status, t.created_at, t.project_id, t.user_id, t.assigner_id FROM tasks AS t"
+	query := "SELECT t.id, t.name, t.description, t.status, t.created_at, t.project_id, t.user_id, t.assigner_id FROM tasks AS t WHERE t.deleted_at IS NULL"
 
 	query, args := applyTaskFilter(query, f)
 	query += " ORDER BY created_at DESC"
@@ -102,7 +101,7 @@ func applyTaskFilter(query string, f entity.TaskFilter) (string, []any) {
 		where += fmt.Sprintf("t.project_id = $%d", len(args))
 	}
 	if where != "" {
-		query += " WHERE " + where
+		query += " AND " + where
 	}
 
 	return query, args

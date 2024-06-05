@@ -12,10 +12,10 @@ import (
 )
 
 func TestApplyTaskFilter(t *testing.T) {
-	wantQuery := "SELECT id FROM tasks WHERE t.user_id = $1 AND t.project_id = $2"
+	wantQuery := "SELECT id FROM tasks t WHERE t.deleted_at IS NULL AND t.user_id = $1 AND t.project_id = $2"
 	wantArgs := []any{"3", "13"}
 
-	query := "SELECT id FROM tasks"
+	query := "SELECT id FROM tasks t"
 	f := entity.TaskFilter{
 		UserID:    "3",
 		ProjectID: "13",

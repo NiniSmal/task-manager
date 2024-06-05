@@ -237,3 +237,20 @@ func TestUserRepository_Users(t *testing.T) {
 		require.Contains(t, usersDB, user)
 	}
 }
+
+func TestUserRepository_DeleteUser(t *testing.T) {
+	db, rds := DBConnection(t)
+	ur := NewUserRepository(db, rds)
+	ctx := context.Background()
+
+	user := entity.User{Email: uuid.NewString()}
+	userID, err := ur.CreateUser(ctx, user)
+	require.NoError(t, err)
+	user.ID = userID
+
+	err = ur.DeleteUser(ctx, user.ID)
+	require.NoError(t, err)
+
+	_, err = ur.GetUserByID(ctx, userID)
+	require.Error(t, err)
+}

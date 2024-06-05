@@ -110,16 +110,6 @@ func (p *ProjectRepository) SoftDeleteProject(ctx context.Context, id int64) err
 	return nil
 }
 
-func (p *ProjectRepository) HardDeleteProjects(ctx context.Context) error {
-	query := "DELETE FROM projects WHERE deleted_at IS NOT NULL"
-	_, err := p.db.ExecContext(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (p *ProjectRepository) AddProjectMembers(ctx context.Context, code string) error {
 	tx, err := p.db.Begin()
 	if err != nil {

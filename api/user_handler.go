@@ -38,6 +38,7 @@ type UserService interface {
 	UploadPhoto(ctx context.Context, imageURL string) error
 	UserByID(ctx context.Context, id int64) (entity.User, error)
 	Users(ctx context.Context) ([]entity.User, error)
+	DeleteUser(ctx context.Context, id int64) error
 }
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -224,6 +225,24 @@ func (u *UserHandler) Users(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = sendJSON(w, users)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+}
+
+func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	idR := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idR, 10, 64)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+
+	}
+
+	err = u.service.DeleteUser(ctx, id)
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
