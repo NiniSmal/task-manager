@@ -79,7 +79,7 @@ func (m *Middleware) AuthHandler(next http.Handler) http.Handler {
 			HandlerError(ctx, w, fmt.Errorf("%w: %s", entity.ErrNotAuthenticated, err))
 			return
 		}
-
+		ctx = context.WithValue(ctx, "session_id", sessionID)
 		ctx = context.WithValue(ctx, "user", user) // вносим в context
 		r = r.WithContext(ctx)                     // перезаписываем запрос с новым контестом, в который сохранили userID
 		next.ServeHTTP(w, r)

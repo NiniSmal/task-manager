@@ -91,6 +91,14 @@ func (r *UserRepository) saveSessionToCache(ctx context.Context, sessionID uuid.
 	return nil
 }
 
+func (r *UserRepository) CleanSessionCache(ctx context.Context, sessionID uuid.UUID) error {
+	err := r.rds.Del(ctx, sessionID.String()).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *UserRepository) UserByEmail(ctx context.Context, email string) (entity.User, error) {
 	query := "SELECT id, email, password, created_at, role, verification, verification_code FROM users WHERE email = $1 AND deleted_at IS NULL"
 
@@ -239,6 +247,12 @@ func (r *UserRepository) SavePhoto(ctx context.Context, photoB64 string, userID 
 		return err
 	}
 
+	sessionID := ctx.Value("session_id").(uuid.UUID)
+
+	err = r.CleanSessionCache(ctx, sessionID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
