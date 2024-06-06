@@ -91,7 +91,7 @@ func (r *UserRepository) saveSessionToCache(ctx context.Context, sessionID uuid.
 	return nil
 }
 
-func (r *UserRepository) CleanSessionCache(ctx context.Context, sessionID uuid.UUID) error {
+func (r *UserRepository) cleanSessionCache(ctx context.Context, sessionID uuid.UUID) error {
 	err := r.rds.Del(ctx, sessionID.String()).Err()
 	if err != nil {
 		return err
@@ -249,7 +249,7 @@ func (r *UserRepository) SavePhoto(ctx context.Context, photoB64 string, userID 
 
 	sessionID := ctx.Value("session_id").(uuid.UUID)
 
-	err = r.CleanSessionCache(ctx, sessionID)
+	err = r.cleanSessionCache(ctx, sessionID)
 	if err != nil {
 		return err
 	}
