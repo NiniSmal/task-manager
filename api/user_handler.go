@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 
 	"github.com/google/uuid"
 	"gitlab.com/nina8884807/task-manager/entity"
@@ -162,7 +163,7 @@ type imageJSON struct {
 
 func (u *UserHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	file, _, err := r.FormFile("file")
+	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
 		HandlerError(ctx, w, err)
 		return
@@ -178,13 +179,16 @@ func (u *UserHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	var base64Encoding string
 
-	mimeType := http.DetectContentType(content)
-	switch mimeType {
+	switch fileHeader.Header.Get("Content-Type") {
 	case "image/jpeg":
-		base64Encoding += "data:image/jpeg;base64,"
+		base64Encoding = "data:image/jpeg;base64,"
 	case "image/png":
-		base64Encoding += "data:image/png;base64,"
+		base64Encoding = "data:image/png;base64,"
+	default:
+		HandlerError(ctx, w, errors.New("unsupported file type"))
+		return
 	}
+
 	base64Encoding += base64.StdEncoding.EncodeToString(content)
 
 	err = u.service.UploadPhoto(ctx, base64Encoding)
