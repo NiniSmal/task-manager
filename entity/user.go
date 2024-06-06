@@ -28,7 +28,8 @@ type User struct {
 	Role             Role      `json:"role"`
 	Verification     bool      `json:"verification,omitempty"`
 	VerificationCode string    `json:"verification_code,omitempty"`
-	Photo            string    `json:"photo"`
+	Photo            *string   `json:"photo"`
+	DeletedAt        time.Time `json:"deleted_at"`
 }
 
 func (user *User) Validate() error {

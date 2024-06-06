@@ -32,7 +32,7 @@ type ProjectRepository interface {
 	Projects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error)
 	AddProjectMembers(ctx context.Context, code string) error
 	UpdateProject(ctx context.Context, id int64, project entity.Project) error
-	DeleteProject(ctx context.Context, id int64) error
+	SoftDeleteProject(ctx context.Context, id int64) error
 	UserProjects(ctx context.Context, filter entity.ProjectFilter) ([]entity.Project, error)
 	ProjectUsers(ctx context.Context, projectID int64) ([]entity.User, error)
 	JoiningUsers(ctx context.Context, projectID int64, userID int64, code string) error
@@ -177,7 +177,7 @@ func (p *ProjectService) DeleteProject(ctx context.Context, id int64) error {
 		return fmt.Errorf("delete project by id %d: %w", id, entity.ErrForbidden)
 	}
 
-	err = p.repo.DeleteProject(ctx, id)
+	err = p.repo.SoftDeleteProject(ctx, id)
 	if err != nil {
 		return fmt.Errorf("delete project by id %d: %w", id, err)
 	}
