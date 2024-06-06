@@ -19,14 +19,16 @@ type TaskService struct {
 	projects ProjectRepository
 	users    UserRepository
 	kafka    *kafka.Writer
+	appURL   string
 }
 
-func NewTaskService(r TaskRepository, pr ProjectRepository, us UserRepository, w *kafka.Writer) *TaskService {
+func NewTaskService(r TaskRepository, pr ProjectRepository, us UserRepository, w *kafka.Writer, appURL string) *TaskService {
 	return &TaskService{
 		tasks:    r,
 		projects: pr,
 		users:    us,
 		kafka:    w,
+		appURL:   appURL,
 	}
 }
 
@@ -70,7 +72,7 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) (entity.Tas
 		return entity.Task{}, err
 	}
 
-	err = s.sendCreateTaskNotification(ctx, task.ProjectID)
+	err = s.sendCreateTaskNotification(ctx, taskDB.Name, task.ProjectID)
 	if err != nil {
 		l := ctx.Value("logger").(*slog.Logger)
 		l.Error("sendCreateTaskNotification", "err", err)
@@ -80,8 +82,7 @@ func (s *TaskService) AddTask(ctx context.Context, task entity.Task) (entity.Tas
 	return taskDB, nil
 }
 
-func (s *TaskService) sendCreateTaskNotification(ctx context.Context, projectID int64) error {
-	// при создании задачи в проекте слать уведомление об этом всем участникам проекта
+func (s *TaskService) sendCreateTaskNotification(ctx context.Context, taskName string, projectID int64) error {
 	userEmails, err := s.projects.ProjectUsers(ctx, projectID)
 	if err != nil {
 		return err
@@ -95,7 +96,7 @@ func (s *TaskService) sendCreateTaskNotification(ctx context.Context, projectID 
 		}
 
 		email := Email{
-			Text:    fmt.Sprintf("New task created in project  %d", projectID),
+			Text:    fmt.Sprintf("New task  %s created in project %s/api/projects/%d", taskName, s.appURL, projectID),
 			To:      userTo.Email,
 			Subject: "New task",
 		}

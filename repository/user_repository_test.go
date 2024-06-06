@@ -29,6 +29,8 @@ func TestUserRepository_CreateUser(t *testing.T) {
 	require.NoError(t, err)
 
 	user.ID = id
+	user.Password = ""
+	user.VerificationCode = ""
 
 	dbUser, err := ur.GetUserByID(ctx, id)
 	require.NoError(t, err)
@@ -87,7 +89,7 @@ func TestUserRepository_Verification(t *testing.T) {
 		Verification:     true,
 		VerificationCode: "123",
 	}
-	dbID, err := ur.Verification(ctx, userUp.VerificationCode, userUp.Verification)
+	dbID, err := ur.VerifyByCode(ctx, userUp.VerificationCode)
 	require.NoError(t, err)
 
 	user.ID = dbID
@@ -95,7 +97,6 @@ func TestUserRepository_Verification(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, user.ID, userDB.ID)
-	require.Equal(t, userDB.VerificationCode, userUp.VerificationCode)
 	require.Equal(t, userDB.Verification, userUp.Verification)
 
 }

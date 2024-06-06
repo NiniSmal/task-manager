@@ -241,7 +241,7 @@ func TestProjectRepository_Projects(t *testing.T) {
 	}
 }
 
-func TestProjectRepository_SoftDeleteProject(t *testing.T) {
+func TestProjectRepository_DeleteProject(t *testing.T) {
 	db, rds := DBConnection(t)
 	ur := NewUserRepository(db, rds)
 	pr := NewProjectRepository(db, rds)
@@ -259,7 +259,7 @@ func TestProjectRepository_SoftDeleteProject(t *testing.T) {
 	projectDB, err := pr.SaveProject(ctx, project)
 	require.NoError(t, err)
 
-	err = pr.SoftDeleteProject(ctx, projectDB.ID)
+	err = pr.Delete(ctx, projectDB.ID)
 	require.NoError(t, err)
 
 	_, err = pr.ProjectByID(ctx, projectDB.ID)

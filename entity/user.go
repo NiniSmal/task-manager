@@ -21,15 +21,15 @@ const (
 )
 
 type User struct {
-	ID               int64     `json:"id"`
-	Email            string    `json:"email"`
-	Password         string    `json:"password,omitempty"`
-	CreatedAt        time.Time `json:"created_at"`
-	Role             Role      `json:"role"`
-	Verification     bool      `json:"verification,omitempty"`
-	VerificationCode string    `json:"verification_code,omitempty"`
-	Photo            *string   `json:"photo"`
-	DeletedAt        time.Time `json:"deleted_at"`
+	ID               int64      `json:"id"`
+	Email            string     `json:"email"`
+	Password         string     `json:"password,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
+	Role             Role       `json:"role"`
+	Verification     bool       `json:"verification,omitempty"`
+	VerificationCode string     `json:"verification_code,omitempty"`
+	Photo            *string    `json:"photo"`
+	DeleteAt         *time.Time `json:"deleted_at,omitempty"`
 }
 
 func (user *User) Validate() error {
