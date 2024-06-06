@@ -186,6 +186,8 @@ func TestUserRepository_SavePhoto(t *testing.T) {
 	ur := NewUserRepository(db, rds)
 	ctx := context.Background()
 
+	sessionID := uuid.New()
+	ctx = context.WithValue(ctx, "session_id", sessionID)
 	user := entity.User{
 		Email:            uuid.New().String(),
 		Password:         uuid.New().String(),
