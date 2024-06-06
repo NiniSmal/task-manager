@@ -132,9 +132,10 @@ func (r *UserRepository) GetSession(ctx context.Context, sessionID uuid.UUID) (e
 		return user, nil
 	}
 
-	query := "SELECT u.id, u.email, u.created_at, u.verification, u.role FROM users u JOIN sessions ON u.id = sessions.user_id WHERE sessions.id = $1 AND u.deleted_at IS NULL"
+	query := "SELECT u.id, u.email, u.created_at, u.verification, u.role, u.photo FROM users u JOIN sessions ON u.id = sessions.user_id WHERE sessions.id = $1 AND u.deleted_at IS NULL"
 
-	err = r.db.QueryRowContext(ctx, query, sessionID).Scan(&user.ID, &user.Email, &user.CreatedAt, &user.Verification, &user.Role)
+	err = r.db.QueryRowContext(ctx, query, sessionID).Scan(&user.ID, &user.Email, &user.CreatedAt, &user.Verification, &user.Role,
+		&user.Photo)
 	if err != nil {
 		return entity.User{}, err
 	}
@@ -266,7 +267,7 @@ func (r *UserRepository) Users(ctx context.Context) ([]entity.User, error) {
 }
 
 func (r *UserRepository) DeleteUser(ctx context.Context, id int64) error {
-	query := "UPDATE users SET deleted_at = now() WHERE id = $1"
+	query := "UPDATE users SET deleted_at = NOW() WHERE id = $1"
 	_, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
