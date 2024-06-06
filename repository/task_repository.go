@@ -34,7 +34,7 @@ func (r *TaskRepository) Create(ctx context.Context, task entity.Task) (entity.T
 }
 
 func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error) {
-	query := "SELECT id, name, description, status, created_at, user_id, project_id, assigner_id FROM tasks WHERE id = $1"
+	query := "SELECT id, name, description, status, created_at, user_id, project_id, assigner_id FROM tasks WHERE id = $1 AND deleted_at IS NULL"
 
 	var task entity.Task
 
@@ -59,7 +59,7 @@ func (r *TaskRepository) ByID(ctx context.Context, id int64) (entity.Task, error
 }
 
 func (r *TaskRepository) Tasks(ctx context.Context, f entity.TaskFilter) ([]entity.Task, error) {
-	query := "SELECT t.id, t.name, t.description, t.status, t.created_at, t.project_id, t.user_id, t.assigner_id FROM tasks AS t"
+	query := "SELECT t.id, t.name, t.description, t.status, t.created_at, t.project_id, t.user_id, t.assigner_id FROM tasks AS t WHERE t.deleted_at IS NULL"
 
 	query, args := applyTaskFilter(query, f)
 	query += " ORDER BY created_at DESC"
@@ -101,14 +101,14 @@ func applyTaskFilter(query string, f entity.TaskFilter) (string, []any) {
 		where += fmt.Sprintf("t.project_id = $%d", len(args))
 	}
 	if where != "" {
-		query += " WHERE " + where
+		query += " AND " + where
 	}
 
 	return query, args
 }
 
 func (r *TaskRepository) Update(ctx context.Context, id int64, task entity.UpdateTask) error {
-	query := "UPDATE tasks SET name = $1, description = $2, status = $3, assigner_id = $4 WHERE id = $5"
+	query := "UPDATE tasks SET name = $1, description = $2, status = $3, assigner_id = $4 WHERE id = $5 AND deleted_at IS NULL"
 
 	_, err := r.db.ExecContext(ctx, query, task.Name, task.Description, task.Status, task.AssignerID, id)
 	if err != nil {
@@ -118,7 +118,7 @@ func (r *TaskRepository) Update(ctx context.Context, id int64, task entity.Updat
 }
 
 func (r *TaskRepository) Delete(ctx context.Context, id int64) error {
-	query := "DELETE FROM tasks WHERE id = $1"
+	query := "UPDATE tasks SET deleted_at = now() WHERE id = $1"
 	_, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err

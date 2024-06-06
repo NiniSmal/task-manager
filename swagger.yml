@@ -206,72 +206,6 @@ paths:
                       format: int64
                       example: 11
 
-    put:
-      summary: Update status task
-      tags:
-        - tasks
-      parameters:
-        - name: id
-          in: query
-          schema:
-            type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: buy milk
-                status:
-                  type: string
-                  example: done
-                assigner_id:
-                  type: integer
-                  format: int64
-                  example: 11
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      format: int64
-                      example: 15
-                    name:
-                      type: string
-                      example: bye milk
-                    status:
-                      type: string
-                      enum:
-                        - done
-                        - not_done
-                        - in_progress
-                    created_at:
-                      type: string
-                      format: date-time
-                    updated_at:
-                      type: string
-                      format: data-time
-                    user_id:
-                      type: integer
-                      format: int64
-                      example: 105
-                    project_id:
-                      type: integer
-                      format: int64
-                      example: 10
-                    assigner_id:
-                      type: integer
-                      format: int64
-                      example: 11
     delete:
       summary: Delete task
       tags:
@@ -284,12 +218,6 @@ paths:
       responses:
         '200':
           description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: ''
-
 
   /users:
     post:
@@ -320,6 +248,33 @@ paths:
               schema:
                 type: string
                 example: ''
+
+
+    get:
+      summary: "get all users"
+      tags:
+        - users
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                    role:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+                    photo:
+                      type: string
+
 
   /login:
     post:
@@ -367,17 +322,50 @@ paths:
             schema:
               type: object
               properties:
+                # 'file' will be the field name in this multipart request
                 file:
-                  type: png
-                  example: pngegg.png
-                  format: binary
-        responses:
-          '200':
-            description: OK
-            content:
-              text/plain:
-                schema:
                   type: string
+                  format: binary
+      responses:
+        '200':
+          description: OK
+
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+            format: int64
+          example: 12
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                      example: 12
+                    email:
+                      type: string
+                    role:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+                    photo:
+                      type: string
 
 
   /verification:
@@ -427,6 +415,20 @@ paths:
               schema:
                 type: string
                 example: ''
+
+    delete:
+      summary: Delete user
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+
 
   /projects:
     post:
@@ -617,11 +619,7 @@ paths:
       responses:
         '200':
           description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: ''
+
 
   /projects/joining:
     post:

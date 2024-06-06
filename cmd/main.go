@@ -135,16 +135,20 @@ func main() {
 		r.Get("/api/projects", hp.Projects)
 		r.Get("/api/projects/{id}", hp.ProjectByID)
 		r.Put("/api/projects/{id}", hp.UpdateProject)
-		r.Delete("/api/projects/{id}", hp.DeleteProject)
 		r.Get("/api/users/projects", hp.UserProjects)
 		r.Post("/api/projects/joining", hp.JoiningUsers)
 		r.Post("/api/upload/photo", hu.UploadPhoto)
+		r.Get("/api/users/{id}", hu.UserByID)
+		r.Get("/api/users", hu.Users)
 
 		r.Get("/api/tasks", ht.GetAllTasks)
 		r.Post("/api/tasks", ht.CreateTask)
 		r.Get("/api/tasks/{id}", ht.GetTaskByID)
 		r.Put("/api/tasks/{id}", ht.UpdateTask)
-		r.Delete("/api/tasks/{id}", ht.Delete)
+		r.Put("/api/tasks/delete/{id}", ht.Delete)
+		r.Put("/api/projects/delete/{id}", hp.DeleteProject)
+		r.Put("/api/users/delete/{id}", hu.DeleteUser)
+
 	})
 
 	router.Post("/api/users", hu.CreateUser)
