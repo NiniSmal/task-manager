@@ -206,6 +206,19 @@ paths:
                       format: int64
                       example: 11
 
+    delete:
+      summary: Delete task
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+
   /users:
     post:
       summary: Registration
@@ -403,6 +416,20 @@ paths:
                 type: string
                 example: ''
 
+    delete:
+      summary: Delete user
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+
+
   /projects:
     post:
       summary: Create new project
@@ -592,11 +619,7 @@ paths:
       responses:
         '200':
           description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: ''
+
 
   /projects/joining:
     post:
