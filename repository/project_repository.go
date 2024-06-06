@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
@@ -54,6 +55,9 @@ func (p *ProjectRepository) ProjectByID(ctx context.Context, id int64) (entity.P
 
 	err := p.db.QueryRowContext(ctx, query, id).Scan(&project.ID, &project.Name, &project.CreatedAt, &project.UpdatedAt, &project.UserID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.Project{}, err
+		}
 		return entity.Project{}, err
 	}
 
@@ -67,6 +71,8 @@ func (p *ProjectRepository) Projects(ctx context.Context, filter entity.ProjectF
 
 	if filter.UserID != 0 {
 		query += fmt.Sprintf(" JOIN user_projects AS up ON up.project_id = p.id WHERE up.user_id = %d  AND deleted_at IS NULL", filter.UserID)
+	} else {
+		query += " WHERE deleted_at IS NULL"
 	}
 
 	rows, err := p.db.QueryContext(ctx, query)
@@ -100,7 +106,7 @@ func (p *ProjectRepository) UpdateProject(ctx context.Context, id int64, project
 	return nil
 }
 
-func (p *ProjectRepository) SoftDeleteProject(ctx context.Context, id int64) error {
+func (p *ProjectRepository) Delete(ctx context.Context, id int64) error {
 	query := "UPDATE projects SET deleted_at = now() WHERE id = $1"
 	_, err := p.db.ExecContext(ctx, query, id)
 	if err != nil {

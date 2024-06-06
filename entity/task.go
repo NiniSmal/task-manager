@@ -37,11 +37,11 @@ type Task struct {
 }
 
 type UpdateTask struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Status      string    `json:"status"`
-	AssignerID  int64     `json:"assigner_id"`
-	DeletedAt   time.Time `json:"deleted_at"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Status      string     `json:"status"`
+	AssignerID  int64      `json:"assigner_id"`
+	DeleteAt    *time.Time `json:"deleted_at"`
 }
 
 type TaskFilter struct {

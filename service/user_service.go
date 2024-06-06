@@ -30,7 +30,7 @@ type UserRepository interface {
 	GetUserByID(ctx context.Context, id int64) (entity.User, error)
 	SaveSession(ctx context.Context, sessionID uuid.UUID, user entity.User, createdAtSession time.Time) error
 	UserByEmail(ctx context.Context, login string) (entity.User, error)
-	Verification(ctx context.Context, verificationCode string, verification bool) (int64, error)
+	VerifyByCode(ctx context.Context, verificationCode string) (int64, error)
 	UpdateVerificationCode(ctx context.Context, id int64, verificationCode string) error
 	UsersToSendVIP(ctx context.Context) ([]entity.User, error)
 	SaveVIPMessage(ctx context.Context, userID int64, createdAt time.Time) error
@@ -112,8 +112,12 @@ func (u *UserService) Login(ctx context.Context, login, password string) (uuid.U
 	if !user.Verification {
 		return uuid.UUID{}, entity.ErrNotVerification
 	}
+
 	sessionID := uuid.New()
 	createdAtSession := time.Now()
+	user.Password = ""
+	user.VerificationCode = ""
+
 	err = u.repo.SaveSession(ctx, sessionID, user, createdAtSession)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("save session: %w", err)
@@ -123,7 +127,7 @@ func (u *UserService) Login(ctx context.Context, login, password string) (uuid.U
 }
 
 func (u *UserService) Verification(ctx context.Context, verificationCode string, verification bool) error {
-	_, err := u.repo.Verification(ctx, verificationCode, verification)
+	_, err := u.repo.VerifyByCode(ctx, verificationCode)
 	if err != nil {
 		return fmt.Errorf("%w, follow the link in the email to verify", entity.ErrNotVerification)
 	}

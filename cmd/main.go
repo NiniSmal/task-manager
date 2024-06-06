@@ -116,7 +116,7 @@ func main() {
 	ss := service.NewSenderService(kafkaWriter)
 	su := service.NewUserService(ut, ss, cfg.AppURL)
 	sp := service.NewProjectService(rp, ss, cfg.AppURL, ut)
-	st := service.NewTaskService(rt, rp, ut, kafkaWriter)
+	st := service.NewTaskService(rt, rp, ut, kafkaWriter, cfg.AppURL)
 
 	hp := api.NewProjectHandler(sp)
 	ht := api.NewTaskHandler(st)
@@ -145,9 +145,10 @@ func main() {
 		r.Post("/api/tasks", ht.CreateTask)
 		r.Get("/api/tasks/{id}", ht.GetTaskByID)
 		r.Put("/api/tasks/{id}", ht.UpdateTask)
-		r.Put("/api/tasks/delete/{id}", ht.Delete)
-		r.Put("/api/projects/delete/{id}", hp.DeleteProject)
-		r.Put("/api/users/delete/{id}", hu.DeleteUser)
+		r.Put("/api/tasks/{id}", ht.Delete)
+		r.Put("/api/projects/{id}", hp.DeleteProject)
+		r.Put("/api/users/{id}", hu.DeleteUser)
+		r.Get("/api/users/myprofile", hu.MyProfile)
 
 	})
 

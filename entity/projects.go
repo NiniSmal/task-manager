@@ -13,13 +13,13 @@ const (
 )
 
 type Project struct {
-	ID        int64     ` json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	UserID    int64     `json:"user_id"`
-	Members   []User    `json:"members"`
-	DeleteAt  time.Time `json:"delete_at"`
+	ID        int64      ` json:"id"`
+	Name      string     `json:"name"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	UserID    int64      `json:"user_id"`
+	Members   []User     `json:"members"`
+	DeleteAt  *time.Time `json:"delete_at"`
 }
 
 type ProjectFilter struct {
