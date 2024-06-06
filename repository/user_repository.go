@@ -48,16 +48,14 @@ VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (entity.User, error) {
-	query := "SELECT id, email, password, created_at, role, verification, verification_code, photo FROM users WHERE id = $1 AND deleted_at IS NULL"
+	query := "SELECT id, email, created_at, role, verification, photo FROM users WHERE id = $1 AND verification = $2 AND deleted_at IS NULL"
 	var user entity.User
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
+	err := r.db.QueryRowContext(ctx, query, id, true).Scan(
 		&user.ID,
 		&user.Email,
-		&user.Password,
 		&user.CreatedAt,
 		&user.Role,
 		&user.Verification,
-		&user.VerificationCode,
 		&user.Photo,
 	)
 	if err != nil {
@@ -109,15 +107,16 @@ func (r *UserRepository) UserByEmail(ctx context.Context, email string) (entity.
 	return user, nil
 }
 
-func (r *UserRepository) Verification(ctx context.Context, verificationCode string, verification bool) (int64, error) {
-	query := "UPDATE users SET verification = $1 WHERE verification_code = $2 RETURNING id"
-	var id int64
-	err := r.db.QueryRowContext(ctx, query, verification, verificationCode).Scan(&id)
+func (r *UserRepository) VerifyByCode(ctx context.Context, code string) (userID int64, err error) {
+	query := "UPDATE users SET verification = TRUE WHERE verification_code = $1 RETURNING id"
+
+	err = r.db.QueryRowContext(ctx, query, code).Scan(&userID)
 	if err != nil {
 		return 0, err
 	}
-	return id, nil
+	return userID, nil
 }
+
 func (r *UserRepository) UpdateVerificationCode(ctx context.Context, id int64, verificationCode string) error {
 	query := "UPDATE users SET verification_code =$1 WHERE id = $2 AND deleted_at IS NULL"
 	_, err := r.db.ExecContext(ctx, query, verificationCode, id)

@@ -248,3 +248,15 @@ func (u *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+func (u *UserHandler) MyProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	user := ctx.Value("user").(entity.User)
+
+	err := sendJSON(w, user)
+	if err != nil {
+		HandlerError(ctx, w, err)
+		return
+	}
+
+}
